@@ -1,0 +1,27 @@
+# .clauderc
+
+## Project: ระบบจัดการตารางเวรพยาบาล
+
+### Tech Stack
+- Frontend: Next.js 14, Tailwind CSS, TypeScript
+- Backend: Supabase (PostgreSQL)
+- Auth: Supabase Auth
+
+### Database Tables
+- users: ข้อมูลพยาบาล
+- departments: แผนก
+- schedules: ตารางเวร
+- shift_assignments: การจัดเวร
+- shift_exchange_requests: คำขอแลกเวร
+- leave_requests: คำขอลา
+- notifications: การแจ้งเตือน
+- work_reports: รายงานการทำงาน
+
+### Current Development Focus
+กำลังพัฒนาระบบจัดตารางเวรสำหรับหัวหน้าพยาบาล
+
+### Business Rules
+- พยาบาลทำงานไม่เกิน 2 กะติดกัน
+- ต้องมีวันหยุดอย่างน้อย 8 วัน/เดือน
+- แต่ละกะต้องมีพยาบาลตามจำนวนที่กำหนด
+
