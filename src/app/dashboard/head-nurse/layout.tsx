@@ -10,12 +10,6 @@ const CalendarIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
-const ClipboardDocumentListIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-  </svg>
-)
-
 const CheckCircleIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -53,18 +47,13 @@ const navigation = [
     icon: CalendarIcon,
   },
   {
-    name: 'ตารางเวรของฉัน',
-    href: '/dashboard/head-nurse/my-schedule',
-    icon: ClipboardDocumentListIcon,
-  },
-  {
     name: 'อนุมัติคำขอ',
     href: '/dashboard/head-nurse/approvals',
     icon: CheckCircleIcon,
   },
   {
-    name: 'รายงาน',
-    href: '/dashboard/head-nurse/reports',
+    name: 'รายงานพยาบาล',
+    href: '/dashboard/head-nurse/nurse-reports',
     icon: ChartBarIcon,
   },
 ]
@@ -181,6 +170,17 @@ export default function HeadNurseLayout({
                   )
                 })}
               </nav>
+
+              {/* Sign out button */}
+              <div className="px-4 py-4 border-t border-gray-200">
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900"
+                >
+                  <ArrowRightOnRectangleIcon className="mr-3 flex-shrink-0 h-6 w-6 text-gray-400" />
+                  ออกจากระบบ
+                </button>
+              </div>
             </div>
 
           </div>

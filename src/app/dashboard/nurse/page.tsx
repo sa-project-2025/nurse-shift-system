@@ -16,12 +16,6 @@ export default function NurseDashboard() {
     }
   }, [router])
 
-  const handleSignOut = () => {
-    localStorage.removeItem('user')
-    localStorage.removeItem('profile')
-    router.push('/login')
-  }
-
   const profile = JSON.parse(localStorage.getItem('profile') || '{}')
 
   return (
@@ -36,12 +30,6 @@ export default function NurseDashboard() {
                 ยินดีต้อนรับ {profile.name || 'พยาบาล'}
               </p>
             </div>
-            <button
-              onClick={handleSignOut}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-            >
-              ออกจากระบบ
-            </button>
           </div>
         </div>
       </header>

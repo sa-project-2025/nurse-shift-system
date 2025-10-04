@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Business Rules Validation
-    // 1. Check monthly hours (each shift = 8 hours, max ~160 hours per month)
+    // 1. Check monthly hours (each shift = 8 hours, max ~176 hours per month)
     const assignDate = new Date(date)
     const monthStart = new Date(assignDate.getFullYear(), assignDate.getMonth(), 1)
     const monthEnd = new Date(assignDate.getFullYear(), assignDate.getMonth() + 1, 0)
@@ -85,20 +85,9 @@ export async function POST(request: NextRequest) {
       .lte('schedules.date', monthEnd.toISOString().split('T')[0])
 
     const monthlyHours = (monthlyShifts?.length || 0) * 8
-    if (monthlyHours >= 160) { // 20 shifts * 8 hours = 160 hours
+    if (monthlyHours >= 176) { // 22 shifts * 8 hours = 176 hours
       return NextResponse.json({
-        error: 'พยาบาลคนนี้ทำงานครบ 160 ชั่วโมงต่อเดือนแล้ว'
-      }, { status: 400 })
-    }
-
-    // 2. Check minimum rest days (should have at least 8 days off per month)
-    const totalDaysInMonth = monthEnd.getDate()
-    const workingDays = monthlyShifts?.length || 0
-    const restDays = totalDaysInMonth - workingDays - 1 // -1 for the current assignment
-
-    if (restDays < 8) {
-      return NextResponse.json({
-        error: 'การจัดเวรนี้ทำให้พยาบาลมีวันหยุดน้อยกว่า 8 วัน/เดือน'
+        error: 'พยาบาลคนนี้ทำงานครบ 176 ชั่วโมงต่อเดือนแล้ว'
       }, { status: 400 })
     }
 

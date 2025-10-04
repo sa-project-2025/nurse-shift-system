@@ -146,7 +146,7 @@ export default function ScheduleManagementPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [toast, setToast] = useState<{
     show: boolean
-    type: 'success' | 'error' | 'warning'
+    type: 'success' | 'error' | 'warning' | 'info'
     title: string
     message: string
   }>({
@@ -228,6 +228,7 @@ export default function ScheduleManagementPage() {
   }
 
   const loadMonthlySchedules = async () => {
+    setLoading(true)
     try {
       const profile = JSON.parse(localStorage.getItem('profile') || '{}')
       const startDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
@@ -273,6 +274,7 @@ export default function ScheduleManagementPage() {
     } catch (error) {
       console.error('Error loading schedules:', error)
     }
+    setLoading(false)
   }
 
   // Helper function to format date consistently
@@ -403,6 +405,134 @@ export default function ScheduleManagementPage() {
     }
   }
 
+  const handleAutoAssign = async () => {
+    const draftSchedules = getDraftSchedulesForMonth()
+
+    if (draftSchedules.length === 0) {
+      showToast('warning', 'ไม่มีตารางเวร', 'กรุณาสร้างตารางเวรก่อนจัดเวรอัตโนมัติ')
+      return
+    }
+
+    // Get incomplete schedules (need nurses)
+    const incompleteSchedules = draftSchedules.filter(schedule =>
+      schedule.assigned_nurses.length < schedule.required_nurse
+    )
+
+    if (incompleteSchedules.length === 0) {
+      showToast('info', 'ตารางเวรครบแล้ว', 'ตารางเวรทั้งหมดมีพยาบาลครบแล้ว')
+      return
+    }
+
+    showConfirmDialog(
+      'จัดเวรอัตโนมัติ',
+      `ระบบจะจัดพยาบาลให้กับตารางเวรที่ยังไม่ครบ ${incompleteSchedules.length} รายการ\n\nต้องการดำเนินการต่อหรือไม่?`,
+      async () => {
+        setConfirmDialog(prev => ({ ...prev, show: false }))
+        setLoading(true)
+
+        try {
+          let assigned = 0
+          let failed = 0
+
+          // Track nurse workload for fair distribution
+          const nurseWorkload = new Map<number, number>()
+          availableNurses.forEach(nurse => {
+            nurseWorkload.set(nurse.user_id, 0)
+          })
+
+          // Count existing assignments
+          schedules.forEach(schedule => {
+            schedule.assigned_nurses.forEach(nurse => {
+              const current = nurseWorkload.get(nurse.user_id) || 0
+              nurseWorkload.set(nurse.user_id, current + 1)
+            })
+          })
+
+          // Sort schedules by date to assign chronologically
+          const sortedSchedules = [...incompleteSchedules].sort((a, b) =>
+            new Date(a.date).getTime() - new Date(b.date).getTime()
+          )
+
+          // Improved fair distribution algorithm
+          for (const schedule of sortedSchedules) {
+            const needed = schedule.required_nurse - schedule.assigned_nurses.length
+            const assignedUserIds = new Set(schedule.assigned_nurses.map(n => n.user_id))
+
+            for (let i = 0; i < needed; i++) {
+              // Sort nurses by workload (ascending) and filter out already assigned to this schedule
+              const availableForSchedule = availableNurses
+                .filter(n => !assignedUserIds.has(n.user_id))
+                .sort((a, b) => {
+                  const workloadA = nurseWorkload.get(a.user_id) || 0
+                  const workloadB = nurseWorkload.get(b.user_id) || 0
+                  return workloadA - workloadB
+                })
+
+              if (availableForSchedule.length === 0) {
+                failed++
+                break
+              }
+
+              // Pick nurse with least workload
+              const nurse = availableForSchedule[0]
+              const success = await assignNurseToSchedule(nurse, schedule)
+
+              if (success) {
+                assigned++
+                assignedUserIds.add(nurse.user_id)
+                nurseWorkload.set(nurse.user_id, (nurseWorkload.get(nurse.user_id) || 0) + 1)
+              } else {
+                failed++
+              }
+            }
+          }
+
+          await loadMonthlySchedules()
+
+          if (failed > 0) {
+            showToast('warning', 'จัดเวรสำเร็จบางส่วน', `จัดพยาบาลไปแล้ว ${assigned} คน | ไม่สามารถจัดได้ ${failed} ตำแหน่ง (อาจเนื่องจากครบชั่วโมงหรือวันหยุดไม่พอ)`)
+          } else {
+            showToast('success', 'จัดเวรอัตโนมัติสำเร็จ!', `จัดพยาบาลไปแล้ว ${assigned} คน กระจายงานอย่างเท่าเทียม`)
+          }
+        } catch (error) {
+          console.error('Error auto-assigning:', error)
+          showToast('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถจัดเวรอัตโนมัติได้')
+        } finally {
+          setLoading(false)
+        }
+      },
+      'info'
+    )
+  }
+
+  const assignNurseToSchedule = async (nurse: Nurse, schedule: Schedule): Promise<boolean> => {
+    try {
+      const profile = JSON.parse(localStorage.getItem('profile') || '{}')
+      const response = await fetch('/api/schedules/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: schedule.date,
+          shift_type: schedule.shift_type,
+          nurse_id: nurse.user_id,
+          department_id: profile.department_id,
+          assigned_by: profile.user_id,
+          required_nurse: schedule.required_nurse
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        console.log('Assignment failed:', error.error)
+      }
+
+      return response.ok
+    } catch (error) {
+      console.error('Error assigning nurse:', error)
+      return false
+    }
+  }
+
   const handlePublishSchedules = async () => {
     const draftSchedules = getDraftSchedulesForMonth()
 
@@ -462,6 +592,34 @@ export default function ScheduleManagementPage() {
              s.status === 'draft'
     })
     return monthSchedules
+  }
+
+  const getNurseStats = () => {
+    const stats = new Map<number, { name: string; email: string; shifts: number; hours: number }>()
+
+    // Initialize with all available nurses
+    availableNurses.forEach(nurse => {
+      stats.set(nurse.user_id, {
+        name: nurse.name,
+        email: nurse.email,
+        shifts: 0,
+        hours: 0
+      })
+    })
+
+    // Count shifts from draft schedules
+    const draftSchedules = getDraftSchedulesForMonth()
+    draftSchedules.forEach(schedule => {
+      schedule.assigned_nurses.forEach(nurse => {
+        const current = stats.get(nurse.user_id)
+        if (current) {
+          current.shifts += 1
+          current.hours = current.shifts * 8
+        }
+      })
+    })
+
+    return Array.from(stats.values()).sort((a, b) => b.shifts - a.shifts)
   }
 
   const handleCreateMonthlySchedules = async () => {
@@ -542,7 +700,7 @@ export default function ScheduleManagementPage() {
     setTempScheduleRequirement(0)
   }
 
-  const showToast = (type: 'success' | 'error' | 'warning', title: string, message: string) => {
+  const showToast = (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => {
     setToast({
       show: true,
       type,
@@ -681,24 +839,12 @@ export default function ScheduleManagementPage() {
     >
       <div className="p-6">
       {/* Header */}
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-black">จัดตารางเวรพยาบาล</h1>
-          <p className="text-black">
-            แผนก: {departmentName || 'กำลังโหลด...'} |
-            จัดการตารางเวรและมอบหมายพยาบาลเข้าเวร
-          </p>
-        </div>
-        <button
-          onClick={() => {
-            localStorage.removeItem('user')
-            localStorage.removeItem('profile')
-            router.push('/login')
-          }}
-          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
-        >
-          ออกจากระบบ
-        </button>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-black">จัดตารางเวรพยาบาล</h1>
+        <p className="text-black">
+          แผนก: {departmentName || 'กำลังโหลด...'} |
+          จัดการตารางเวรและมอบหมายพยาบาลเข้าเวร
+        </p>
       </div>
 
       {/* Create Schedule Button */}
@@ -749,6 +895,14 @@ export default function ScheduleManagementPage() {
               </p>
             </div>
             <div className="flex space-x-2">
+              <button
+                onClick={handleAutoAssign}
+                disabled={loading}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
+              >
+                <span>🤖</span>
+                <span>{loading ? 'กำลังจัด...' : 'จัดเวรอัตโนมัติ'}</span>
+              </button>
               <button
                 onClick={handleDeleteDraftSchedules}
                 disabled={loading}
@@ -1132,6 +1286,53 @@ export default function ScheduleManagementPage() {
                 </div>
               )}
             </div>
+
+            {/* Nurse Workload Stats */}
+            <div className="bg-white rounded-lg shadow p-6 mt-6">
+              <h3 className="text-lg font-semibold text-black mb-4">สถิติการทำงาน (ร่าง)</h3>
+              <div className="max-h-96 overflow-y-auto space-y-2">
+                {getNurseStats().map((stat, index) => (
+                  <div
+                    key={index}
+                    className={`p-3 rounded-lg border ${
+                      stat.shifts === 0 ? 'bg-gray-50 border-gray-200' :
+                      stat.shifts >= 20 ? 'bg-red-50 border-red-200' :
+                      stat.shifts >= 15 ? 'bg-yellow-50 border-yellow-200' :
+                      'bg-green-50 border-green-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{stat.name}</p>
+                        <p className="text-xs text-gray-600">{stat.email}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-900">
+                          {stat.shifts} กะ
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {stat.hours} ชม.
+                        </p>
+                        {stat.shifts >= 22 && (
+                          <p className="text-xs text-red-600 font-medium mt-1">เต็ม!</p>
+                        )}
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
+                      <div
+                        className={`h-1.5 rounded-full ${
+                          stat.shifts >= 22 ? 'bg-red-500' :
+                          stat.shifts >= 15 ? 'bg-yellow-500' :
+                          'bg-green-500'
+                        }`}
+                        style={{ width: `${Math.min((stat.shifts / 22) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
@@ -1370,7 +1571,7 @@ export default function ScheduleManagementPage() {
 
       {/* Confirm Dialog */}
       {confirmDialog.show && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center" style={{zIndex: 10000}}>
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-xxs flex items-center justify-center" style={{zIndex: 10000}}>
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 relative shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -1424,6 +1625,15 @@ export default function ScheduleManagementPage() {
                 {loading ? 'กำลังดำเนินการ...' : confirmDialog.confirmText}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-xs flex items-center justify-center" style={{zIndex: 10000}}>
+          <div className="text-black bg-white p-6 rounded-lg">
+            <p>กำลังโหลด...</p>
           </div>
         </div>
       )}
