@@ -38,8 +38,7 @@ interface Stats {
 }
 
 export default function MySchedulePage() {
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month')
-  const [previousViewMode, setPreviousViewMode] = useState<'month' | 'week'>('month')
+  const [viewMode, setViewMode] = useState<'month' | 'day'>('month')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [schedules, setSchedules] = useState<Schedule[]>([])
@@ -173,14 +172,23 @@ export default function MySchedulePage() {
     return calendar
   }
 
-  const getScheduleForDate = (date: Date | null): Schedule | undefined => {
-    if (!date) return undefined
-    // Use local date format to avoid timezone issues
+  const getSchedulesForDate = (date: Date | null): Schedule[] => {
+    if (!date) return []
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
-    return schedules.find(s => s.date === dateStr)
+
+    const daySchedules = schedules.filter(s => s.date === dateStr)
+
+    // Sort by shift type: morning -> afternoon -> night
+    const shiftOrder: { [key in ShiftType]: number } = {
+      morning: 1,
+      afternoon: 2,
+      night: 3
+    }
+
+    return daySchedules.sort((a, b) => shiftOrder[a.shift_type] - shiftOrder[b.shift_type])
   }
 
   const isToday = (date: Date | null): boolean => {
@@ -259,35 +267,13 @@ export default function MySchedulePage() {
   const handleDateClick = (date: Date | null) => {
     if (date) {
       setSelectedDate(date)
-      setPreviousViewMode(viewMode as 'month' | 'week')
       setViewMode('day')
     }
   }
 
-  const handleBackToPrevious = () => {
-    setViewMode(previousViewMode)
+  const handleBackToMonth = () => {
+    setViewMode('month')
     setSelectedDate(null)
-  }
-
-  const getWeekDays = () => {
-    const start = new Date(currentDate)
-    start.setDate(start.getDate() - start.getDay()) // Start from Sunday
-
-    const days = []
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(start)
-      day.setDate(start.getDate() + i)
-      days.push(day)
-    }
-    return days
-  }
-
-  const previousWeek = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 7))
-  }
-
-  const nextWeek = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 7))
   }
 
   return (
@@ -302,21 +288,6 @@ export default function MySchedulePage() {
             </p>
           </div>
 
-          {/* View Toggle */}
-          <div className="flex space-x-2">
-            <button
-              onClick={() => { setViewMode('month'); setPreviousViewMode('month') }}
-              className={`px-4 py-2 rounded ${viewMode === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-black'}`}
-            >
-              มุมมองเดือน
-            </button>
-            <button
-              onClick={() => { setViewMode('week'); setPreviousViewMode('week') }}
-              className={`px-4 py-2 rounded ${viewMode === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-black'}`}
-            >
-              มุมมองสัปดาห์
-            </button>
-          </div>
         </div>
       </div>
 
@@ -351,87 +322,16 @@ export default function MySchedulePage() {
         </div>
       )}
 
-      {/* Week View */}
-      {viewMode === 'week' && (
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl text-black font-semibold">
-              สัปดาห์ที่ {Math.ceil(currentDate.getDate() / 7)} - {monthName}
-            </h2>
-            <div className="flex space-x-2">
-              <button
-                onClick={previousWeek}
-                className="px-3 py-1 text-sm text-black bg-gray-100 hover:bg-gray-200 rounded"
-              >
-                ← สัปดาห์ก่อน
-              </button>
-              <button
-                onClick={nextWeek}
-                className="px-3 py-1 text-sm text-black bg-gray-100 hover:bg-gray-200 rounded"
-              >
-                สัปดาห์ถัดไป →
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-7 gap-3">
-            {getWeekDays().map((date, idx) => {
-              const schedule = getScheduleForDate(date)
-              const isTodayDate = isToday(date)
-              const dayName = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'][date.getDay()]
-
-              return (
-                <div
-                  key={idx}
-                  className={`border-2 rounded-lg p-3 ${
-                    isTodayDate ? 'border-blue-500' : 'border-gray-200'
-                  } cursor-pointer hover:bg-gray-50 transition-colors`}
-                  onClick={() => handleDateClick(date)}
-                >
-                  <div className="text-center mb-2">
-                    <div className="text-sm font-semibold text-gray-500">{dayName}</div>
-                    <div className="text-lg font-bold text-black">{date.getDate()}</div>
-                    <div className="text-xs text-gray-500">
-                      {date.toLocaleDateString('th-TH', { month: 'short' })}
-                    </div>
-                  </div>
-
-                  {schedule ? (
-                    <div className={`p-3 rounded-lg ${SHIFT_TYPES[schedule.shift_type].color}`}>
-                      <div className="text-center">
-                        <div className="text-3xl mb-1">{SHIFT_TYPES[schedule.shift_type].icon}</div>
-                        <div className="text-xs font-semibold mb-1">
-                          {SHIFT_TYPES[schedule.shift_type].label}
-                        </div>
-                        <div className="text-xs">{SHIFT_TYPES[schedule.shift_type].time}</div>
-                        <div className="text-xs mt-2 font-medium">
-                          {schedule.colleagues.length} เพื่อนร่วมกะ
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-center">
-                      <div className="text-2xl mb-1">🏖️</div>
-                      <div className="text-xs text-green-800 font-medium">หยุด</div>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
       {/* Day View */}
       {viewMode === 'day' && selectedDate && (
         <div className="bg-white p-6 rounded-lg shadow mb-6">
           <div className="mb-4">
             <button
-              onClick={handleBackToPrevious}
+              onClick={handleBackToMonth}
               className="text-blue-500 hover:text-blue-700 flex items-center space-x-2"
             >
               <span>←</span>
-              <span>กลับไป{previousViewMode === 'week' ? 'มุมมองสัปดาห์' : 'มุมมองเดือน'}</span>
+              <span>กลับไปมุมมองเดือน</span>
             </button>
           </div>
 
@@ -440,39 +340,43 @@ export default function MySchedulePage() {
           </h2>
 
           {(() => {
-            const schedule = getScheduleForDate(selectedDate)
-            if (schedule) {
+            const daySchedules = getSchedulesForDate(selectedDate)
+            if (daySchedules.length > 0) {
               return (
-                <div className={`p-6 rounded-lg border-2 ${SHIFT_TYPES[schedule.shift_type].color}`}>
-                  <div className="flex items-center space-x-4 mb-6">
-                    <span className="text-6xl">{SHIFT_TYPES[schedule.shift_type].icon}</span>
-                    <div>
-                      <h3 className="text-2xl font-bold text-black">กะ{SHIFT_TYPES[schedule.shift_type].label}</h3>
-                      <p className="text-xl text-black">{SHIFT_TYPES[schedule.shift_type].time}</p>
-                      <p className="text-lg text-black mt-1">8 ชั่วโมง</p>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-300 pt-4">
-                    <h4 className="text-lg font-semibold text-black mb-3">เพื่อนร่วมกะ ({schedule.colleagues.length} คน)</h4>
-                    {schedule.colleagues.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {schedule.colleagues.map((colleague) => (
-                          <div key={colleague.user_id} className="flex items-center space-x-3 p-3 bg-white rounded-lg">
-                            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                              <span className="text-gray-600 font-semibold">{colleague.name.charAt(0)}</span>
-                            </div>
-                            <div>
-                              <p className="font-medium text-black">{colleague.name}</p>
-                              <p className="text-sm text-gray-600">{colleague.email}</p>
-                            </div>
-                          </div>
-                        ))}
+                <div className="space-y-4">
+                  {daySchedules.map((schedule, idx) => (
+                    <div key={idx} className={`p-6 rounded-lg border-2 ${SHIFT_TYPES[schedule.shift_type].color}`}>
+                      <div className="flex items-center space-x-4 mb-6">
+                        <span className="text-6xl">{SHIFT_TYPES[schedule.shift_type].icon}</span>
+                        <div>
+                          <h3 className="text-2xl font-bold text-black">กะ{SHIFT_TYPES[schedule.shift_type].label}</h3>
+                          <p className="text-xl text-black">{SHIFT_TYPES[schedule.shift_type].time}</p>
+                          <p className="text-lg text-black mt-1">8 ชั่วโมง</p>
+                        </div>
                       </div>
-                    ) : (
-                      <p className="text-black">ไม่มีเพื่อนร่วมกะในวันนี้</p>
-                    )}
-                  </div>
+
+                      <div className="border-t border-gray-300 pt-4">
+                        <h4 className="text-lg font-semibold text-black mb-3">เพื่อนร่วมกะ ({schedule.colleagues.length} คน)</h4>
+                        {schedule.colleagues.length > 0 ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {schedule.colleagues.map((colleague) => (
+                              <div key={colleague.user_id} className="flex items-center space-x-3 p-3 bg-white rounded-lg">
+                                <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                                  <span className="text-gray-600 font-semibold">{colleague.name.charAt(0)}</span>
+                                </div>
+                                <div>
+                                  <p className="font-medium text-black">{colleague.name}</p>
+                                  <p className="text-sm text-gray-600">{colleague.email}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-black">ไม่มีเพื่อนร่วมกะ</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )
             } else {
@@ -527,7 +431,7 @@ export default function MySchedulePage() {
               {/* Calendar days */}
               {getMonthCalendar().map((week, weekIdx) => (
                 week.map((date, dayIdx) => {
-                  const schedule = getScheduleForDate(date)
+                  const daySchedules = getSchedulesForDate(date)
                   const isTodayDate = isToday(date)
 
                   return (
@@ -537,7 +441,7 @@ export default function MySchedulePage() {
                         !date ? 'bg-gray-50' :
                         isTodayDate ? 'border-blue-500 border-2' :
                         'border-gray-200'
-                      } ${date ? 'cursor-pointer hover:bg-gray-50 transition-colors' : ''}`}
+                      } ${date ? 'cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200' : ''}`}
                       onClick={() => handleDateClick(date)}
                     >
                       {date && (
@@ -546,28 +450,32 @@ export default function MySchedulePage() {
                             {date.getDate()}
                           </div>
 
-                          {schedule ? (
-                            <div
-                              className={`p-2 rounded border ${SHIFT_TYPES[schedule.shift_type].color} relative group`}
-                              title={`กะ${SHIFT_TYPES[schedule.shift_type].label}`}
-                            >
-                              <div className="text-center">
-                                <div className="text-xl mb-1">{SHIFT_TYPES[schedule.shift_type].icon}</div>
-                                <div className="text-xs font-medium">{SHIFT_TYPES[schedule.shift_type].time}</div>
-                                <div className="text-xs mt-1">8 hrs</div>
-                              </div>
-
-                              {/* Tooltip on hover */}
-                              {schedule.colleagues.length > 0 && (
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                                  <div className="bg-gray-900 text-white text-xs rounded py-2 px-3 whitespace-nowrap">
-                                    <p className="font-semibold mb-1">เพื่อนร่วมกะ:</p>
-                                    {schedule.colleagues.map((colleague, idx) => (
-                                      <p key={idx}>{colleague.name}</p>
-                                    ))}
+                          {daySchedules.length > 0 ? (
+                            <div className="space-y-1">
+                              {daySchedules.map((schedule, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`p-1 rounded border ${SHIFT_TYPES[schedule.shift_type].color} relative group hover:shadow-md hover:scale-105 transition-all duration-150`}
+                                  title={`กะ${SHIFT_TYPES[schedule.shift_type].label}`}
+                                >
+                                  <div className="text-center">
+                                    <div className="text-lg">{SHIFT_TYPES[schedule.shift_type].icon}</div>
+                                    <div className="text-xs font-medium">{SHIFT_TYPES[schedule.shift_type].label}</div>
                                   </div>
+
+                                  {/* Tooltip on hover */}
+                                  {schedule.colleagues.length > 0 && (
+                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+                                      <div className="bg-gray-900 text-white text-xs rounded py-2 px-3 whitespace-nowrap">
+                                        <p className="font-semibold mb-1">เพื่อนร่วมกะ:</p>
+                                        {schedule.colleagues.map((colleague, idx) => (
+                                          <p key={idx}>{colleague.name}</p>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                              ))}
                             </div>
                           ) : (
                             <div className="p-2 rounded-lg bg-green-50 border border-green-200 text-center">
@@ -639,7 +547,7 @@ export default function MySchedulePage() {
                   className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2 font-medium"
                 >
                   <span>✓</span>
-                  <span>ทำงานได้ตามเวร</span>
+                  <span>บันทึกการทำงาน</span>
                 </button>
                 <p className="text-xs text-gray-500 text-center mt-2">
                   ยืนยันการทำงานตามตารางเวรเดือนนี้

@@ -76,7 +76,8 @@ export default function NurseLayout({
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [profile, setProfile] = useState<{name?: string, email?: string}>({})
+  const [profile, setProfile] = useState<{user_id?: number, name?: string, email?: string}>({})
+  const [incomingRequestsCount, setIncomingRequestsCount] = useState(0)
   const pathname = usePathname()
   const router = useRouter()
 
@@ -89,6 +90,34 @@ export default function NurseLayout({
       }
     }
   }, [])
+
+  useEffect(() => {
+    // Load incoming requests count
+    const loadIncomingRequestsCount = async () => {
+      if (!profile.user_id) return
+
+      try {
+        const response = await fetch('/api/nurse/shift-exchange/incoming-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: profile.user_id })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setIncomingRequestsCount(data.requests?.length || 0)
+        }
+      } catch (error) {
+        console.error('Error loading incoming requests count:', error)
+      }
+    }
+
+    loadIncomingRequestsCount()
+
+    // Refresh count every 30 seconds
+    const interval = setInterval(loadIncomingRequestsCount, 30000)
+    return () => clearInterval(interval)
+  }, [profile.user_id])
 
   const handleSignOut = () => {
     localStorage.removeItem('user')
@@ -120,6 +149,7 @@ export default function NurseLayout({
             <nav className="mt-5 px-2 space-y-1">
               {navigation.map((item) => {
                 const isActive = pathname === item.href
+                const showBadge = item.href === '/dashboard/nurse/shift-exchange' && incomingRequestsCount > 0
                 return (
                   <Link
                     key={item.name}
@@ -136,6 +166,11 @@ export default function NurseLayout({
                       } mr-3 flex-shrink-0 h-6 w-6`}
                     />
                     {item.name}
+                    {showBadge && (
+                      <span className="ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                        {incomingRequestsCount}
+                      </span>
+                    )}
                   </Link>
                 )
               })}
@@ -162,6 +197,7 @@ export default function NurseLayout({
               <nav className="mt-5 flex-1 px-2 space-y-1">
                 {navigation.map((item) => {
                   const isActive = pathname === item.href
+                  const showBadge = item.href === '/dashboard/nurse/shift-exchange' && incomingRequestsCount > 0
                   return (
                     <Link
                       key={item.name}
@@ -178,6 +214,11 @@ export default function NurseLayout({
                         } mr-3 flex-shrink-0 h-6 w-6`}
                       />
                       {item.name}
+                      {showBadge && (
+                        <span className="ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                          {incomingRequestsCount}
+                        </span>
+                      )}
                     </Link>
                   )
                 })}

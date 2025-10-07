@@ -99,15 +99,28 @@ export default function NurseReportsPage() {
     )
   }
 
+  const handleExportPDF = () => {
+    window.print()
+  }
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">รายงานการทำงานของพยาบาล</h1>
-        <p className="text-gray-600">ดูรายงานการทำงานของพยาบาลในแผนกเพื่อวิเคราะห์และจัดเวร</p>
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">รายงานการทำงานของพยาบาล</h1>
+          <p className="text-gray-600">ดูรายงานการทำงานของพยาบาลในแผนกเพื่อวิเคราะห์และจัดเวร</p>
+        </div>
+        <button
+          onClick={handleExportPDF}
+          disabled={nurses.length === 0}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed print:hidden"
+        >
+          📥 Export PDF
+        </button>
       </div>
 
       {/* Period Selector */}
-      <div className="mb-6">
+      <div className="mb-6 print:hidden">
         <label className="block text-sm font-medium text-gray-700 mb-2">เลือกเดือน/ปี</label>
         <select
           value={selectedPeriod}
@@ -233,6 +246,28 @@ export default function NurseReportsPage() {
           ))}
         </div>
       )}
+
+      {/* Print Styles */}
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+          .max-w-7xl,
+          .max-w-7xl * {
+            visibility: visible;
+          }
+          .max-w-7xl {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+        }
+      `}</style>
     </div>
   )
 }

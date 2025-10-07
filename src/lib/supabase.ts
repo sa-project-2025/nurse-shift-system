@@ -13,7 +13,7 @@ export type Database = {
           user_id: number
           name: string
           email: string
-          role: 'nurse' | 'head_nurse'
+          role: 'nurse' | 'head_nu rse'
           phone: string | null
           pic_profile: string | null
           department_id: number | null

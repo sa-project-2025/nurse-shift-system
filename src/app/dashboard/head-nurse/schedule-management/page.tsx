@@ -985,8 +985,8 @@ export default function ScheduleManagementPage() {
                     key={index}
                     date={dateStr}
                     shift="general"
-                    className={`min-h-[80px] p-1 border cursor-pointer ${
-                      isCurrentMonth ? 'bg-white border-gray-200' : 'bg-gray-50 text-black border-gray-100'
+                    className={`min-h-[80px] p-1 border cursor-pointer transition-all duration-150 ${
+                      isCurrentMonth ? 'bg-white border-gray-200 hover:bg-gray-50 hover:shadow-sm' : 'bg-gray-50 text-black border-gray-100'
                     } ${isToday ? 'ring-2 ring-blue-300' : ''} ${
                       isSelected ? 'bg-blue-50 ring-2 ring-blue-500' : ''
                     } border-dashed-0 border-solid`}
@@ -1012,7 +1012,7 @@ export default function ScheduleManagementPage() {
                               className="p-0.5 min-h-[35px] border-0 bg-transparent"
                             >
                               <div
-                                className={`text-[10px] px-2 py-1.5 rounded cursor-pointer flex flex-col items-center justify-center min-h-[30px] ${
+                                className={`text-[10px] px-2 py-1.5 rounded cursor-pointer flex flex-col items-center justify-center min-h-[30px] transition-all duration-150 ${
                                   // Check if this shift is currently selected
                                   selectedDate === dateStr && selectedShift === shift.value
                                     ? 'ring-2 ring-blue-500 '
@@ -1021,10 +1021,10 @@ export default function ScheduleManagementPage() {
                                   schedule
                                     ? schedule.status === 'draft'
                                       ? schedule.assigned_nurses.length >= schedule.required_nurse
-                                        ? 'bg-green-100 text-green-800 hover:bg-green-200'  // ครบแล้ว
-                                        : 'bg-orange-100 text-orange-800 hover:bg-orange-200' // ยังไม่ครบ
-                                      : shift.color  // published
-                                    : 'bg-gray-100 text-black hover:bg-gray-200'  // ไม่มีตารางเวร
+                                        ? 'bg-green-100 text-green-800 hover:bg-green-200 hover:shadow-md hover:scale-105'  // ครบแล้ว
+                                        : 'bg-orange-100 text-orange-800 hover:bg-orange-200 hover:shadow-md hover:scale-105' // ยังไม่ครบ
+                                      : shift.color + ' hover:shadow-md hover:scale-105'  // published
+                                    : 'bg-gray-100 text-black hover:bg-gray-200 hover:shadow-sm'  // ไม่มีตารางเวร
                                 }`}
                                 title={schedule ? `${shift.label}: ${schedule.assigned_nurses.length}/${schedule.required_nurse} (${schedule.status === 'draft' ? 'ร่าง' : 'ประกาศแล้ว'}) - คลิกเพื่อเลือกกะนี้` : `${shift.label}: ว่าง - คลิกเพื่อเลือกกะนี้`}
                                 onClick={(e) => {
