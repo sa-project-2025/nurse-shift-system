@@ -1,35 +1,36 @@
-:::mermaid
 sequenceDiagram
     actor HN as Head Nurse
-    participant UI as Report UI
-    participant Controller as Report Controller
-    participant API as Report API
-    participant Service as Report Generation Service
+    participant UI as Nurse Reports UI
+    participant Controller as Reports Controller
+    participant API as Reports API
+    participant Service as Reports Service
     participant DB as Database
 
-    HN->>UI: 1. เข้าเมนูรายงาน
-    UI->>Controller: Load report page
-    Controller->>API: GET /api/reports/summary
-    API->>Service: Calculate monthly reports
-    Service->>DB: 2. SELECT shift_assignments<br/>GROUP BY user, COUNT shifts<br/>WHERE last month
-    DB-->>Service: Aggregated report data
-    Service->>Service: Calculate hours, rest days
-    Service-->>API: Report summary list
-    API-->>Controller: Report data
-    Controller-->>UI: Render report list
-    UI-->>HN: แสดงรายชื่อ reports
+    HN->>UI: 1. คลิกเมนู "รายงานพยาบาล"
+    UI->>Controller: Load nurse reports page
+    Controller->>API: GET /api/head-nurse/nurse-reports
+    API->>Service: Get department nurses reports
+    Service->>DB: 2. SELECT users + work_reports<br/>LEFT JOIN WHERE department<br/>AND report_month = เดือนปัจจุบัน
+    DB-->>Service: รายงานพยาบาลทั้งหมด (เดือนปัจจุบัน)
+    Service->>Service: Calculate department statistics
+    Service-->>API: Nurses data + stats
+    API-->>Controller: {nurses: [...], stats: {...}}
+    Controller-->>UI: Render reports page
+    UI-->>HN: แสดงรายงานเดือนปัจจุบัน<br/>(วันทำงาน, กะ, ชั่วโมง, สถานะส่ง)
 
-    HN->>UI: 3. กดเข้าดูรายละเอียด report
-    UI->>Controller: Request report details (user_id)
-    Controller->>API: GET /api/reports/details?user_id=X
-    API->>Service: Generate detailed report
-    Service->>DB: 4. SELECT วันทำงาน, กะ, ชั่วโมง<br/>WHERE user_id & last month
-    DB-->>Service: Detailed shift data
+    HN->>UI: 3. เลือกเดือน/ปีที่ต้องการวิเคราะห์
+    UI->>Controller: Request month change
+    Controller->>API: POST /api/head-nurse/nurse-reports<br/>{userId, monthYear}
+    API->>Service: Get reports for selected month
+    Service->>DB: 4. SELECT users + work_reports<br/>LEFT JOIN WHERE department<br/>AND report_month = :selected_month
+    DB-->>Service: รายงานพยาบาลของเดือนที่เลือก
     Service->>Service: Calculate statistics
-    Service-->>API: Detailed report data
-    API-->>Controller: Report details
-    Controller-->>UI: Render detailed view
-    UI-->>HN: แสดงวันทำงาน, กะ, ชั่วโมง
+    Service-->>API: Processed reports data
+    API-->>Controller: {nurses: [...]}
+    Controller-->>UI: Update reports display
+    UI-->>HN: 5. ดูภาพรวมสถิติแผนก<br/>(เช้า/บ่าย/ดึก, วันหยุด)
 
-    Note over HN: วิเคราะห์ข้อมูล<br/>เพื่อวางแผนเดือนถัดไป
+    HN->>UI: 6. คลิกปุ่ม "Export PDF"
+    UI->>UI: 7. window.print()<br/>(สร้าง PDF จาก browser)
+    UI-->>HN: Download PDF สรุปรายงาน
 

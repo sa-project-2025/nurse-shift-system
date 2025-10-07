@@ -6,4 +6,4 @@ Database Schema:
 - shift_exchange_requests (exchange_id, requester_id, target_user_id, original_schedule_id, target_schedule_id, request_date, reason, status)
 - leave_requests (leave_id, user_id, start_date, end_date, leave_type, reason, request_date, status)
 - notifications (notification_id, user_id, title, action_type, description, related_id, related_table, is_read, create_date)
-- work_reports (report_id,user_id,report_month,work_days_count,shifts_count,total_hours,submitted_at)
+- work_reports (report_id,user_id,report_month,work_days_count,shifts_count,total_hours,submitted_at,morning_shifts,afternoon_shifts,night_shifts,rest_days)
