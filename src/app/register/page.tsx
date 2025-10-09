@@ -1,8 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+
+interface Department {
+  department_id: number
+  department_name: string
+}
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -14,6 +19,7 @@ export default function RegisterPage() {
     role: 'nurse' as 'nurse' | 'head_nurse',
     departmentId: ''
   })
+  const [departments, setDepartments] = useState<Department[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -33,6 +39,30 @@ export default function RegisterPage() {
       role
     }))
   }
+
+  useEffect(() => {
+    // Load departments on component mount
+    const loadDepartments = async () => {
+      try {
+        console.log('Fetching departments...')
+        const response = await fetch('/api/departments')
+        console.log('Response status:', response.status)
+
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Departments data:', data)
+          setDepartments(data.departments || [])
+        } else {
+          const errorData = await response.json()
+          console.error('Error response:', errorData)
+        }
+      } catch (error) {
+        console.error('Error loading departments:', error)
+      }
+    }
+
+    loadDepartments()
+  }, [])
 
   const validateForm = () => {
     if (!formData.name.trim()) {
@@ -229,20 +259,25 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Department ID */}
+          {/* Department Selection */}
           <div>
             <label htmlFor="departmentId" className="block text-sm font-medium text-gray-700 mb-2">
-              รหัสแผนก
+              แผนกที่สังกัด
             </label>
-            <input
-              type="number"
+            <select
               id="departmentId"
               name="departmentId"
               value={formData.departmentId}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
-              placeholder="กรอกรหัสแผนกที่สังกัด (ถ้ามี)"
-            />
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black bg-white"
+            >
+              <option value="">-- เลือกแผนก --</option>
+              {departments.map((dept) => (
+                <option key={dept.department_id} value={dept.department_id}>
+                  {dept.department_name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Password */}
