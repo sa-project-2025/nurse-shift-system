@@ -2,20 +2,6 @@
 
 ระบบจัดการตารางเวรพยาบาล - A comprehensive shift scheduling system for nurses and head nurses.
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-- [Project Structure](#project-structure)
-- [Database Schema](#database-schema)
-- [User Roles](#user-roles)
-- [Key Features by Role](#key-features-by-role)
-- [API Documentation](#api-documentation)
-- [Environment Variables](#environment-variables)
-- [Development](#development)
-- [Documentation](#documentation)
 
 ## 🎯 Overview
 
