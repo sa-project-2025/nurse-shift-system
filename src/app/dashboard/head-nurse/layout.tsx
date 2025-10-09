@@ -10,11 +10,6 @@ const CalendarIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
-const CheckCircleIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-)
 
 const ChartBarIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,6 +35,12 @@ const ArrowRightOnRectangleIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
+const DocumentTextIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+)
+
 const navigation = [
   {
     name: 'จัดตารางเวร',
@@ -47,9 +48,9 @@ const navigation = [
     icon: CalendarIcon,
   },
   {
-    name: 'อนุมัติคำขอ',
-    href: '/dashboard/head-nurse/approvals',
-    icon: CheckCircleIcon,
+    name: 'อนุมัติคำขอลางาน',
+    href: '/dashboard/head-nurse/leave-approvals',
+    icon: DocumentTextIcon,
   },
   {
     name: 'รายงานพยาบาล',
@@ -64,7 +65,8 @@ export default function HeadNurseLayout({
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [profile, setProfile] = useState<{name?: string, email?: string}>({})
+  const [profile, setProfile] = useState<{user_id?: number, name?: string, email?: string, department_id?: number}>({})
+  const [pendingLeaveCount, setPendingLeaveCount] = useState(0)
   const pathname = usePathname()
   const router = useRouter()
 
@@ -77,6 +79,35 @@ export default function HeadNurseLayout({
       }
     }
   }, [])
+
+  useEffect(() => {
+    // Load pending leave requests count
+    const loadPendingLeaveCount = async () => {
+      if (!profile.department_id) return
+
+      try {
+        const response = await fetch('/api/head-nurse/leave-request/pending-count', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ departmentId: profile.department_id })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setPendingLeaveCount(data.count || 0)
+        }
+      } catch (error) {
+        console.error('Error loading pending leave count:', error)
+      }
+    }
+
+    if (profile.department_id) {
+      loadPendingLeaveCount()
+      // Refresh every 30 seconds
+      const interval = setInterval(loadPendingLeaveCount, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [profile.department_id])
 
   const handleSignOut = () => {
     localStorage.removeItem('user')
@@ -108,6 +139,7 @@ export default function HeadNurseLayout({
             <nav className="mt-5 px-2 space-y-1">
               {navigation.map((item) => {
                 const isActive = pathname === item.href
+                const showBadge = item.href === '/dashboard/head-nurse/leave-approvals' && pendingLeaveCount > 0
                 return (
                   <Link
                     key={item.name}
@@ -116,14 +148,21 @@ export default function HeadNurseLayout({
                       isActive
                         ? 'bg-blue-100 text-blue-900'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    } group flex items-center px-2 py-2 text-sm font-medium rounded-md`}
+                    } group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md`}
                   >
-                    <item.icon
-                      className={`${
-                        isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
-                      } mr-3 flex-shrink-0 h-6 w-6`}
-                    />
-                    {item.name}
+                    <div className="flex items-center">
+                      <item.icon
+                        className={`${
+                          isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                        } mr-3 flex-shrink-0 h-6 w-6`}
+                      />
+                      {item.name}
+                    </div>
+                    {showBadge && (
+                      <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                        {pendingLeaveCount}
+                      </span>
+                    )}
                   </Link>
                 )
               })}
@@ -150,6 +189,7 @@ export default function HeadNurseLayout({
               <nav className="mt-5 flex-1 px-2 space-y-1">
                 {navigation.map((item) => {
                   const isActive = pathname === item.href
+                  const showBadge = item.href === '/dashboard/head-nurse/leave-approvals' && pendingLeaveCount > 0
                   return (
                     <Link
                       key={item.name}
@@ -158,14 +198,21 @@ export default function HeadNurseLayout({
                         isActive
                           ? 'bg-blue-100 text-blue-900'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      } group flex items-center px-2 py-2 text-sm font-medium rounded-md`}
+                      } group flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md`}
                     >
-                      <item.icon
-                        className={`${
-                          isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
-                        } mr-3 flex-shrink-0 h-6 w-6`}
-                      />
-                      {item.name}
+                      <div className="flex items-center">
+                        <item.icon
+                          className={`${
+                            isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                          } mr-3 flex-shrink-0 h-6 w-6`}
+                        />
+                        {item.name}
+                      </div>
+                      {showBadge && (
+                        <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                          {pendingLeaveCount}
+                        </span>
+                      )}
                     </Link>
                   )
                 })}
