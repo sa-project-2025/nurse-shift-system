@@ -42,7 +42,7 @@ export default function HeadNurseDashboard() {
               🎉 เข้าสู่ระบบสำเร็จ!
             </h2>
             <p className="text-gray-500">
-              หน้า Dashboard หัวหน้าพยาบาลจะถูกพัฒนาต่อ
+              กดแถบ เมนูด้านซ้ายเพื่อเริ่มต้นใช้งานระบบจัดการเวรพยาบาล
             </p>
           </div>
         </div>
