@@ -7,5 +7,4 @@ Database Schema:
 
 - leave_requests (leave_id, user_id, start_date, end_date, leave_type, reason,reason_reject request_date, status,approved_by,response_date,leave_days)
 
-- notifications (notification_id, user_id, title, action_type, description, related_id, related_table, is_read, create_date)
 - work_reports (report_id,user_id,report_month,work_days_count,shifts_count,total_hours,submitted_at,morning_shifts,afternoon_shifts,night_shifts,rest_days,)
