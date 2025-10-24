@@ -1,45 +1,61 @@
-actor:
-1. เข้าเมนูตารางเวรของฉัน
+# Use Case 6: ดูตารางเวรของฉัน (พยาบาล)
 
+## Actor Actions:
+1. เข้าเมนู "ตารางเวรของฉัน"
+3. เลือกเดือน/ปีที่ต้องการดู (ถ้าต้องการ)
+5. คลิกที่เวรใดเวรหนึ่งเพื่อดูรายละเอียด
 
-4 .คลิกที่เวรใดเวรหนึ่งเพื่อดูรายละเอียด
-
-
-
-system:
+## System Actions:
 2. ดึงตารางเวรของพยาบาลในเดือนที่เลือก
-SELECT
-  s.schedules_id,
-  s.date,
-  s.shift_type,
-  s.status,
-  sa.assignment_id,
-  wr.report_id,
-  wr.status as report_status
-FROM schedules s
-JOIN shift_assignments sa ON s.schedules_id = sa.schedules_id
-LEFT JOIN work_reports wr ON sa.assignment_id = wr.assignment_id
-WHERE sa.user_id = :user_id
-AND s.date >= :selected_month_start
-AND s.date <= :selected_month_end
-ORDER BY s.date, s.shift_type;
-3.โหลดตารางเวรของเดือนที่เลือก
-5. ดึงรายละเอียดเวรและพยาบาลคนอื่นในเวรเดียวกัน
-SELECT
-  s.schedules_id,
-  s.date,
-  s.shift_type,
-  s.required_nurse,
-  u.user_id,
-  u.name as nurse_name,
-  sa.assignment_id,
-  wr.report_id,
-  wr.status as report_status
-FROM schedules s
-JOIN shift_assignments sa ON s.schedules_id = sa.schedules_id
-JOIN users u ON sa.user_id = u.user_id
-LEFT JOIN work_reports wr ON sa.assignment_id = wr.assignment_id AND wr.user_id = :user_id
-WHERE s.schedules_id = :schedule_id
-ORDER BY u.name;
-6. แสดงรายละเอียดของเวรนั้น รวมถึงพยาบาลคนอื่นที่เวรเดียวกัน
+   - Query 1 (ดึงตารางเวรของพยาบาล):
+     ```sql
+     SELECT sa.assignment_id,
+            s.schedules_id, s.date, s.shift_type, s.status, s.department_id
+     FROM shift_assignments sa
+     INNER JOIN schedules s ON sa.schedules_id = s.schedules_id
+     WHERE sa.user_id = {userId}
+       AND s.date >= '{firstDay}' AND s.date <= '{lastDay}'
+       AND s.status = 'published'
+     ORDER BY s.date
+     ```
+   - Query 2 (ดึงเพื่อนร่วมกะ):
+     ```sql
+     SELECT sa.schedules_id,
+            u.user_id, u.name, u.email
+     FROM shift_assignments sa
+     INNER JOIN users u ON sa.user_id = u.user_id
+     WHERE sa.schedules_id IN ({scheduleIds})
+       AND sa.user_id != {userId}
+     ```
 
+4. แสดงตารางเวรพร้อมคำนวณสถิติ
+   - แสดงปฏิทินพร้อมเวรที่ได้รับ
+   - คำนวณสถิติ:
+     * กะทั้งหมด (totalShifts)
+     * กะเช้า/บ่าย/ดึก (morning/afternoon/nightShifts)
+     * ชั่วโมงรวม (totalHours = totalShifts × 8)
+     * วันทำงาน (workDays = จำนวนวันที่ไม่ซ้ำ)
+     * วันหยุด (restDays = จำนวนวันในเดือน - workDays)
+
+6. ดึงรายละเอียดเวรและเพื่อนร่วมงาน
+   - แสดงข้อมูล:
+     * วันที่และกะ
+     * เวลาทำงาน
+     * รายชื่อเพื่อนร่วมกะทั้งหมด
+     * ชั่วโมงทำงาน (8 ชม.)
+
+7. แสดงรายละเอียดของเวรนั้น รวมถึงเพื่อนร่วมกะ
+   - สามารถดูโปรไฟล์เพื่อนร่วมงาน
+   - สามารถกลับไปดูภาพรวมเดือน
+
+## Features:
+- 📅 **ปฏิทินแบบเดือน**: ดูตารางเวรทั้งเดือนในมุมมองปฏิทิน
+- 📊 **สถิติการทำงาน**: ชั่วโมง, วันทำงาน, วันหยุด
+- 👥 **เพื่อนร่วมกะ**: ดูว่าใครเวรเดียวกัน
+- 🔄 **เปลี่ยนเดือน**: ดูตารางเวรเดือนอื่นได้
+- ✅ **บันทึกการทำงาน**: ส่งรายงานการทำงานประจำเดือน
+
+## Business Rules:
+- ✅ ดูได้เฉพาะตารางเวรที่ประกาศแล้ว (status = 'published')
+- ✅ เห็นเฉพาะเวรที่ตัวเองได้รับมอบหมาย
+- ✅ สามารถดูย้อนหลังได้ทุกเดือน

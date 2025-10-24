@@ -1,65 +1,149 @@
-actor:
+# Use Case 9: ขอลางาน (พยาบาล)
+
+## Actor Actions:
 1. คลิกเข้าเมนู "ขอลางาน"
 3. กรอกข้อมูลคำขอลางาน:
-    - เลือกประเภทการลา(sick/personal/vacation/other)
+   - เลือกประเภทการลา (sick/personal/vacation/other)
    - เลือกวันที่เริ่มต้นและสิ้นสุด
    - กรอกเหตุผล
-6. กดปุ่ม "ส่งคำขอลางาน"
-8. กลับไปทำข้อ3จนกว่าจะถูก
-11. กดแถบ "รอการอนุมัติ"
-13. กดแถบ "อนุมัติแล้ว"
-15. กดแถบ "ไม่อนุมัติ"
-17. กดแถบ "ทั้งหมด"
+5. ตรวจสอบเวรที่ได้รับผลกระทบ
+7. กดปุ่ม "ส่งคำขอลางาน"
+9. ดูคำขอที่รอการอนุมัติ (tab "รอการอนุมัติ")
+11. ดูคำขอที่อนุมัติแล้ว (tab "อนุมัติแล้ว")
+13. ดูคำขอที่ไม่อนุมัติ (tab "ไม่อนุมัติ")
+15. ดูคำขอทั้งหมด (tab "ทั้งหมด")
+17. ดูรายละเอียดคำขอแต่ละรายการ
 
-
-system:
+## System Actions:
 2. แสดงแบบฟอร์มคำขอลางาน
+   - แสดงฟิลด์: ประเภทการลา, วันเริ่มต้น, วันสิ้นสุด, เหตุผล
+
 4. ดึงเวรที่จะได้รับผลกระทบจากการลา
-SELECT s.schedules_id, s.date, s.shift_type, s.status 
-FROM schedules s 
-INNER JOIN shift_assignments sa ON s.schedules_id = sa.schedules_id 
-WHERE sa.user_id = :userId 
-AND s.date BETWEEN :startDate 
-AND :endDate AND s.status = 'published';
-5. แสดงจำนวนวันลาและเวรที่ได้รับผลกระทบ
-7. ตรวจสอบว่าวันที่ซ้อนทับกับคำขอลาอันเก่าไหม
-7a. ตรวจสอบข้อมูลครบถ้วน
-- ต้องมี: userId, startDate, endDate, leaveType, reason
-- วันที่สิ้นสุดต้องมากกว่าหรือเท่ากับวันที่เริ่มต้น
-7b. ตรวจสอบคำขอที่ซ้อนทับโดยดึงคำขอที่รอการอนุมัติ
-SELECT leave_id, start_date, end_date 
-FROM leave_requests 
-WHERE user_id = :userId 
-AND status = 'pending';
-7c. แสดงข้อความ error หากข้อมูลไม่ถูกต้อง
-9. สร้างคำขอลางาน
-INSERT INTO leave_requests ( 
-user_id, start_date, end_date, leave_days, 
-leave_type, reason, status, request_date ) 
-VALUES ( 
-:userId, :startDate, :endDate, :leaveDays, :leaveType, :reason, 'pending', NOW());
-10.แสดงข้อความส่งคำขอสำเร็จ
-12. ดึงคำขอที่รอการอนุมัติ 
-SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date, lr.leave_days, lr.leave_type, lr.reason, lr.status, lr.request_date, lr.response_date, lr.approved_by, u.name as approver_name 
-FROM leave_requests lr 
-LEFT JOIN users u ON lr.approved_by = u.user_id 
-WHERE lr.user_id = :userId AND lr.status = 'pending' 
-ORDER BY lr.request_date DESC;
-14. ดึงคำขอที่อนุมัติแล้ว 
-SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date, lr.leave_days, lr.leave_type, lr.reason, lr.status, lr.request_date, lr.response_date, lr.approved_by, u.name as approver_name 
-FROM leave_requests lr 
-LEFT JOIN users u ON lr.approved_by = u.user_id 
-WHERE lr.user_id = :userId AND lr.status = 'approved' 
-ORDER BY lr.request_date DESC;
-16. ดึงคำขอที่ไม่อนุมัติ 
-SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date, lr.leave_days, lr.leave_type, lr.reason, lr.reason_reject, lr.status, lr.request_date, lr.response_date, lr.approved_by, u.name as approver_name 
-FROM leave_requests lr 
-LEFT JOIN users u ON lr.approved_by = u.user_id WHERE lr.user_id = :userId AND lr.status = 'rejected' 
-ORDER BY lr.request_date DESC;
-18. ดึงคำขอทั้งหมด 
-SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date, lr.leave_days, lr.leave_type, lr.reason, lr.reason_reject, lr.status, lr.request_date, lr.response_date, lr.approved_by, u.name as approver_name 
-FROM leave_requests lr 
-LEFT JOIN users u ON lr.approved_by = u.user_id WHERE lr.user_id = :userId 
-ORDER BY lr.request_date DESC;
+   ```sql
+   SELECT s.schedules_id, s.date, s.shift_type, s.status
+   FROM schedules s
+   INNER JOIN shift_assignments sa ON s.schedules_id = sa.schedules_id
+   WHERE sa.user_id = {userId}
+     AND s.date BETWEEN '{startDate}' AND '{endDate}'
+     AND s.status = 'published'
+   ORDER BY s.date, s.shift_type
+   ```
 
+6. แสดงจำนวนวันลาและเวรที่ได้รับผลกระทบ
+   - คำนวณ: จำนวนวันลา = (endDate - startDate) + 1
+   - แสดง: รายการเวรที่จะหายไป
 
+8. ตรวจสอบความถูกต้องของคำขอ
+   - Validation 8a: ตรวจสอบข้อมูลครบถ้วน
+     * ต้องมี: userId, startDate, endDate, leaveType, reason
+     * endDate >= startDate
+
+   - Validation 8b: ตรวจสอบคำขอซ้อนทับ
+     ```sql
+     SELECT leave_id, start_date, end_date, leave_type
+     FROM leave_requests
+     WHERE user_id = {userId}
+       AND status = 'pending'
+       AND (
+         (start_date <= '{endDate}' AND end_date >= '{startDate}')
+       )
+     ```
+
+   - ถ้าผ่านทุกเงื่อนไข → บันทึกคำขอ:
+     ```sql
+     INSERT INTO leave_requests
+       (user_id, start_date, end_date, leave_days,
+        leave_type, reason, status, request_date)
+     VALUES
+       ({userId}, '{startDate}', '{endDate}', {leaveDays},
+        '{leaveType}', '{reason}', 'pending', NOW())
+     ```
+
+10. แสดงข้อความส่งคำขอสำเร็จ
+
+12. ดึงคำขอที่รอการอนุมัติ (status = 'pending')
+    ```sql
+    SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date,
+           lr.leave_days, lr.leave_type, lr.reason, lr.status,
+           lr.request_date, lr.response_date, lr.approved_by,
+           u.name as approver_name
+    FROM leave_requests lr
+    LEFT JOIN users u ON lr.approved_by = u.user_id
+    WHERE lr.user_id = {userId}
+      AND lr.status = 'pending'
+    ORDER BY lr.request_date DESC
+    ```
+
+14. ดึงคำขอที่อนุมัติแล้ว (status = 'approved')
+    ```sql
+    SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date,
+           lr.leave_days, lr.leave_type, lr.reason, lr.status,
+           lr.request_date, lr.response_date, lr.approved_by,
+           u.name as approver_name
+    FROM leave_requests lr
+    LEFT JOIN users u ON lr.approved_by = u.user_id
+    WHERE lr.user_id = {userId}
+      AND lr.status = 'approved'
+    ORDER BY lr.request_date DESC
+    ```
+
+16. ดึงคำขอที่ไม่อนุมัติ (status = 'rejected')
+    ```sql
+    SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date,
+           lr.leave_days, lr.leave_type, lr.reason, lr.reason_reject,
+           lr.status, lr.request_date, lr.response_date, lr.approved_by,
+           u.name as approver_name
+    FROM leave_requests lr
+    LEFT JOIN users u ON lr.approved_by = u.user_id
+    WHERE lr.user_id = {userId}
+      AND lr.status = 'rejected'
+    ORDER BY lr.request_date DESC
+    ```
+
+17. แสดงรายการคำขอทั้งหมด
+    - แสดงข้อมูลจาก Query ข้อ 12, 14, 16, หรือ 18 (ตาม tab ที่เลือก)
+
+18. ดึงคำขอทั้งหมด (all status)
+    ```sql
+    SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date,
+           lr.leave_days, lr.leave_type, lr.reason, lr.reason_reject,
+           lr.status, lr.request_date, lr.response_date, lr.approved_by,
+           u.name as approver_name
+    FROM leave_requests lr
+    LEFT JOIN users u ON lr.approved_by = u.user_id
+    WHERE lr.user_id = {userId}
+    ORDER BY lr.request_date DESC
+    ```
+
+## Business Rules:
+- ✅ วันสิ้นสุดต้อง >= วันเริ่มต้น
+- ✅ ไม่สามารถมีคำขอ pending ซ้อนทับกัน
+- ✅ ต้องกรอกข้อมูลครบถ้วน (ประเภท, วันที่, เหตุผล)
+- ⚠️ แสดงเวรที่จะได้รับผลกระทบก่อนส่งคำขอ
+- ⚠️ ส่งคำขอแล้วแก้ไขไม่ได้ (ต้องรอหัวหน้าพยาบาลพิจารณา)
+
+## Features:
+- 📝 **ฟอร์มขอลา**: เลือกประเภท, วันที่, เหตุผล
+- 📊 **เวรที่ได้รับผลกระทบ**: ดูเวรที่จะหายไปก่อนส่งคำขอ
+- 🔍 **กรองสถานะ**: ดูคำขอแยกตามสถานะ (pending/approved/rejected/all)
+- 📅 **ประเภทการลา**:
+  - sick (ลาป่วย)
+  - personal (ลากิจ)
+  - vacation (ลาพักร้อน)
+  - other (อื่น ๆ)
+- 📜 **ประวัติ**: ดูประวัติคำขอลาทั้งหมด
+
+## Validation:
+1. ✅ ข้อมูลครบถ้วน
+2. ✅ วันที่ถูกต้อง (end >= start)
+3. ✅ ไม่ซ้อนทับคำขอ pending
+4. ✅ มีเวรในช่วงที่ขอลาหรือไม่ (optional warning)
+
+## Status Flow:
+```
+pending → (รอหัวหน้าพยาบาลพิจารณา)
+   ↓
+approved (อนุมัติ) → เวรถูกยกเลิก
+   หรือ
+rejected (ไม่อนุมัติ) → เวรยังคงอยู่
+```
