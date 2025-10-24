@@ -1,64 +1,40 @@
-actor:
-1. คลิกเมนู"รายงานพยาบาล"
+# Use Case 3: ดูรายงานพยาบาล (หัวหน้าพยาบาล)
+
+## Actor Actions:
+1. คลิกเมนู "รายงานพยาบาล"
 3. เลือกเดือน/ปีที่ต้องการวิเคราะห์
 5. ดูภาพรวมสถิติของแผนกทั้งหมด
 6. คลิกปุ่ม "Export PDF"
 
+## System Actions:
+2. ดึงรายงานของพยาบาลทั้งหมดในแผนก
+   - Query 1: `SELECT department_id FROM departments WHERE head_nurse_id = {userId}`
+   - Query 2: `SELECT user_id, name, email FROM users WHERE department_id = {dept_id} AND role = 'nurse'`
+   - Query 3: สำหรับแต่ละพยาบาล:
+     - ตรวจสอบ:
+       SELECT work_days_count, shifts_count, total_hours,
+              morning_shifts, afternoon_shifts, night_shifts, rest_days
+       FROM work_reports
+       WHERE user_id = {nurse_id} AND report_month = '{monthYear}'
+     - ถ้าไม่มี → คำนวณจาก:
+       SELECT sa.assignment_id, s.date, s.shift_type, s.status
+       FROM shift_assignments sa
+       INNER JOIN schedules s ON sa.schedule_id = s.schedules_id
+       WHERE sa.user_id = {nurse_id}
+         AND s.date >= '{firstDay}' AND s.date <= '{lastDay}'
+         AND s.status = 'published'
 
-system:
-2. ดึงรายงานของพยาบาลทั้งหมดในแผนกของเดือนปัจจุบัน
-SELECT 
-    u.user_id,
-    u.name AS nurse_name,
-    d.department_name,
-    w.report_month,
-    w.work_days_count,
-    w.shifts_count,
-    w.total_hours,
-    w.morning_shifts,
-    w.afternoon_shifts,
-    w.night_shifts,
-    w.rest_days,
-    w.submitted_at
-FROM work_reports w
-LEFT JOIN users u 
-    ON w.user_id = u.user_id
-LEFT JOIN departments d 
-    ON u.department_id = d.department_id
-WHERE u.department_id = (
-    SELECT department_id 
-    FROM users 
-    WHERE role = '<head_nurse_id>'
-)
-  AND u.role = 'nurse'
-  AND w.report_month = TO_CHAR(CURRENT_DATE, 'YYYY-MM');
-4. ดึงรายงานของพยาบาลทั้งหมดในแผนกของเดือนที่เลือก
-SELECT 
-    u.user_id,
-    u.name AS nurse_name,
-    d.department_name,
-    w.report_month,
-    w.work_days_count,
-    w.shifts_count,
-    w.total_hours,
-    w.morning_shifts,
-    w.afternoon_shifts,
-    w.night_shifts,
-    w.rest_days,
-    w.submitted_at
-FROM work_reports w
-LEFT JOIN users u 
-    ON w.user_id = u.user_id
-LEFT JOIN departments d 
-    ON u.department_id = d.department_id
-WHERE u.department_id = (
-    SELECT department_id 
-    FROM users 
-    WHERE role = 'head_nurse_id'
-)
-  AND u.role = 'nurse'
-  AND w.report_month = '<เลือกเดือน>';
+4. แสดงรายงานของพยาบาลของเดือนที่เลือก
+   - แสดงตารางรายงานพยาบาลแต่ละคน:
+     * ชื่อพยาบาล
+     * วันทำงาน
+     * กะทั้งหมด (แยกเช้า/บ่าย/ดึก)
+     * ชั่วโมงรวม
+     * วันหยุด
+     * สถานะส่งรายงาน (ส่งแล้ว/ยังไม่ส่ง)
 
-7.สร้างไฟล์ PDF ของสรุปรายงาน พร้อม dowload
-
+7. สร้างไฟล์ PDF ของสรุปรายงาน พร้อม download
+   - สร้าง PDF จากข้อมูลรายงานทั้งหมด
+   - รวมสถิติภาพรวมแผนก
+   - Download ไฟล์ให้ผู้ใช้
 

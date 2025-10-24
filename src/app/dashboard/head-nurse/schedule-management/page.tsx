@@ -212,7 +212,7 @@ export default function ScheduleManagementPage() {
   const loadAvailableNurses = async () => {
     try {
       const profile = JSON.parse(localStorage.getItem('profile') || '{}')
-      const response = await fetch('/api/nurses/available', {
+      const response = await fetch('/api/head-nurse/nurses/available', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ departmentId: profile.department_id })
@@ -236,7 +236,7 @@ export default function ScheduleManagementPage() {
 
       console.log('Loading schedules for:', formatDateToString(startDate), 'to', formatDateToString(endDate))
 
-      const response = await fetch(`/api/schedules/monthly?t=${Date.now()}`, {
+      const response = await fetch(`/api/head-nurse/schedules/monthly?t=${Date.now()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -323,7 +323,7 @@ export default function ScheduleManagementPage() {
     setLoading(true)
     try {
       const profile = JSON.parse(localStorage.getItem('profile') || '{}')
-      const response = await fetch('/api/schedules/assign', {
+      const response = await fetch('/api/head-nurse/schedules/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -508,7 +508,7 @@ export default function ScheduleManagementPage() {
   const assignNurseToSchedule = async (nurse: Nurse, schedule: Schedule): Promise<boolean> => {
     try {
       const profile = JSON.parse(localStorage.getItem('profile') || '{}')
-      const response = await fetch('/api/schedules/assign', {
+      const response = await fetch('/api/head-nurse/schedules/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -556,7 +556,7 @@ export default function ScheduleManagementPage() {
           const profile = JSON.parse(localStorage.getItem('profile') || '{}')
           const scheduleIds = draftSchedules.map(s => s.schedules_id!).filter(id => id)
 
-          const response = await fetch('/api/schedules/publish', {
+          const response = await fetch('/api/head-nurse/schedules/publish', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -629,7 +629,7 @@ export default function ScheduleManagementPage() {
       const monthYear = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`
 
 
-      const response = await fetch('/api/schedules/create-bulk', {
+      const response = await fetch('/api/head-nurse/schedules/create-bulk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -664,7 +664,7 @@ export default function ScheduleManagementPage() {
     try {
       const profile = JSON.parse(localStorage.getItem('profile') || '{}')
 
-      const response = await fetch('/api/schedules/update-single-requirement', {
+      const response = await fetch('/api/head-nurse/schedules/update-single-requirement', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -731,7 +731,7 @@ export default function ScheduleManagementPage() {
     try {
       const profile = JSON.parse(localStorage.getItem('profile') || '{}')
 
-      const response = await fetch('/api/schedules/remove-assignment', {
+      const response = await fetch('/api/head-nurse/schedules/remove-assignment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -793,7 +793,7 @@ export default function ScheduleManagementPage() {
           const profile = JSON.parse(localStorage.getItem('profile') || '{}')
           const monthYear = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`
 
-          const response = await fetch('/api/schedules/delete-drafts', {
+          const response = await fetch('/api/head-nurse/schedules/delete-drafts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -900,7 +900,6 @@ export default function ScheduleManagementPage() {
                 disabled={loading}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
               >
-                <span>🤖</span>
                 <span>{loading ? 'กำลังจัด...' : 'จัดเวรอัตโนมัติ'}</span>
               </button>
               <button
