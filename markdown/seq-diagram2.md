@@ -1,36 +1,93 @@
+# Sequence Diagram: Use Case 2 - Login (เข้าสู่ระบบ)
+
+```mermaid
 sequenceDiagram
-    actor User as Head Nurse/Nurse
-    participant UI as Login UI
-    participant Controller as Login Controller
-    participant API as Login API
-    participant Service as Authentication Service
-    participant DB as Database
+    actor User
+    participant UI as :loginUI
+    participant API as :loginAPI
+    participant DB as :database
 
-    User->>UI: 1. เข้าหน้า Login
-    UI->>Controller: Load login page
-    Controller-->>UI: Render login form
-    UI-->>User: แสดงฟอร์ม Login
+    User->>UI: เข้าหน้า Login
+    activate UI
+    deactivate UI
 
-    User->>UI: 2. กรอกอีเมลและรหัสผ่าน
-    User->>UI: 3. กดปุ่ม "เข้าสู่ระบบ"
+    User->>UI: กรอกอีเมลและรหัสผ่าน
+    User->>UI: กดปุ่ม เข้าสู่ระบบ
 
-    UI->>Controller: Submit login credentials
-    Controller->>API: POST /api/auth/login
-    API->>Service: Authenticate user
-    Service->>DB: 4. SELECT user WHERE email
-    DB-->>Service: User data (if exists)
-    Service->>Service: Verify password (bcrypt)
+    activate UI
+    UI->>API: POST /api/auth/login
+    deactivate UI
+    activate API
 
-    alt Authentication Failed
-        Service-->>API: Authentication error
-        API-->>Controller: Login failed response
-        Controller-->>UI: Display error message
-        UI-->>User: แสดงข้อความ error
-    else Authentication Success
-        Service->>Service: Create session/token
-        Service-->>API: User profile + token
-        API-->>Controller: 5. Login success + user data
-        Controller->>Controller: Store session in localStorage
-        Controller-->>UI: Redirect to Dashboard
-        UI-->>User: แสดงหน้า Dashboard
+    API->>DB: SELECT * FROM users<br/>WHERE email = ?
+    activate DB
+    DB-->>API: user data
+    deactivate DB
+
+    alt user not found
+        API-->>UI: error ไม่พบผู้ใช้
+        activate UI
+        UI->>UI: แสดง error
+        deactivate UI
     end
+
+    API->>API: ตรวจสอบ password
+
+    alt password ไม่ถูกต้อง
+        API-->>UI: error รหัสผ่านไม่ถูกต้อง
+        activate UI
+        UI->>UI: แสดง error
+        deactivate UI
+    end
+
+    API-->>UI: success + user + profile
+    deactivate API
+
+    activate UI
+    UI->>UI: เก็บ session ใน localStorage
+
+    alt role = nurse
+        UI->>UI: redirect /dashboard/nurse
+    else role = head_nurse
+        UI->>UI: redirect /dashboard/head-nurse
+    end
+    deactivate UI
+```
+
+## Layer Architecture
+
+| Layer | Component | Technology |
+|-------|-----------|------------|
+| User | ผู้ใช้งาน | Browser |
+| :loginUI | UI Layer | Next.js Client Component |
+| :loginAPI | API Layer | /api/auth/login |
+| :database | Database | PostgreSQL (Supabase) |
+
+## Key Points
+
+### Authentication Flow
+- ตรวจสอบ email จาก users table
+- เปรียบเทียบ password แบบ plaintext
+- สร้าง session token (base64)
+- เก็บ user + profile ใน localStorage
+
+### Error Handling
+- ไม่พบ user → error "ไม่พบข้อมูลผู้ใช้"
+- password ไม่ถูกต้อง → error "รหัสผ่านไม่ถูกต้อง"
+
+### Role-based Redirect
+- nurse → /dashboard/nurse
+- head_nurse → /dashboard/head-nurse
+
+## API Endpoints
+
+**POST /api/auth/login**
+- รับ: { email, password }
+- ตรวจสอบ credentials จาก users table
+- คืนค่า: { success, user, profile }
+
+## Database Tables
+
+**users** - user profile และ authentication
+- Query: `SELECT * FROM users WHERE email = ?`
+- เปรียบเทียบ: `password === inputPassword`

@@ -1,41 +1,58 @@
+# Sequence Diagram: Use Case 1 - Register (ลงทะเบียนผู้ใช้)
+
+```mermaid
 sequenceDiagram
-    actor User as Head Nurse/Nurse
-    participant UI as Registration UI
-    participant Controller as Registration Controller
-    participant API as Register API
-    participant Service as Registration Service
-    participant DB as Database
+    actor User
+    participant UI as :registerUI
+    participant DeptCtrl as :deptController
+    participant RegCtrl as :registerController
+    participant DB as :database
 
-    User->>UI: 1. เข้าหน้าลงทะเบียน
-    UI->>Controller: Load registration page
-    Controller->>API: 2. GET /register
-    API->>DB: 3. SELECT departments
-    DB-->>API: Department list
-    API-->>Controller: Form data + departments
-    Controller-->>UI: 4. แสดงฟอร์ม + ข้อมูลแผนก
-    UI-->>User: Display registration form
+    User->>UI: เข้าหน้าลงทะเบียน
+    activate UI
+    UI->>DeptCtrl: GET departments
+    activate DeptCtrl
+    DeptCtrl->>DB: SELECT departments
+    activate DB
+    DB-->>DeptCtrl: รายการแผนก
+    deactivate DB
+    DeptCtrl-->>UI: { departments }
+    deactivate DeptCtrl
+    deactivate UI
 
-    User->>UI: 5. กรอกข้อมูล<br/>(ชื่อ, อีเมล, รหัสผ่าน, เบอร์, แผนก, บทบาท)
-    User->>UI: 6. กดปุ่ม "ลงทะเบียน"
+    User->>UI: กรอกข้อมูล
+    User->>UI: กดปุ่ม "สมัครสมาชิก"
 
-    UI->>Controller: Submit registration data
-    Controller->>API: POST /api/auth/register
-    API->>Service: Validate registration data
-    Service->>DB: 7. Check duplicates<br/>SELECT email, phone
-    DB-->>Service: Validation result
+    activate UI
+    UI->>UI: Validate ข้อมูล
 
     alt ข้อมูลไม่ถูกต้อง
-        Service-->>API: Validation error
-        API-->>Controller: Error response
-        Controller-->>UI: แสดงข้อความ error
-        UI-->>User: แจ้งข้อผิดพลาด
-    else ข้อมูลถูกต้อง
-        Service->>Service: 8. Hash password (bcrypt)
-        Service->>DB: 9. INSERT INTO users
-        DB-->>Service: User created
-        Service-->>API: Success response
-        API-->>Controller: Registration success
-        Controller-->>UI: 10. แสดงข้อความสำเร็จ
-        UI-->>User: ลงทะเบียนสำเร็จ
+        UI->>UI: แสดง error
     end
 
+    UI->>RegCtrl: POST register
+    deactivate UI
+    activate RegCtrl
+    RegCtrl->>DB: INSERT INTO auth.users<br/>(email, password)
+    activate DB
+    DB-->>RegCtrl: user created
+    deactivate DB
+
+    RegCtrl->>DB: INSERT INTO users<br/>(name, email, password,<br/>role, phone, department_id)
+    activate DB
+    DB-->>RegCtrl: profile created
+    deactivate DB
+
+    alt role = head_nurse
+        RegCtrl->>DB: UPDATE departments
+        activate DB
+        DB-->>RegCtrl: updated
+        deactivate DB
+    end
+
+    RegCtrl-->>UI: { success }
+    deactivate RegCtrl
+    activate UI
+    UI->>UI: redirect /login
+    deactivate UI
+```
