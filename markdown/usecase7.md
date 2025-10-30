@@ -91,53 +91,35 @@
 
 14. แสดงคำขอทั้งหมดของตัวเอง (status = 'pending')
     ```sql
-    SELECT ser.exchange_id, ser.requester_id, ser.target_user_id,
-           ser.original_schedule_id, ser.target_schedule_id,
-           ser.request_date, ser.reason, ser.status,
-           u.name as target_user_name, u.email as target_user_email,
-           s1.date as original_date, s1.shift_type as original_shift_type,
-           s2.date as target_date, s2.shift_type as target_shift_type
-    FROM shift_exchange_requests ser
-    INNER JOIN users u ON ser.target_user_id = u.user_id
-    INNER JOIN schedules s1 ON ser.original_schedule_id = s1.schedules_id
-    LEFT JOIN schedules s2 ON ser.target_schedule_id = s2.schedules_id
-    WHERE ser.requester_id = {userId}
-      AND ser.status = 'pending'
-    ORDER BY ser.request_date DESC
+    SELECT exchange_id, requester_id, target_user_id,
+           original_schedule_id, target_schedule_id,
+           request_date, reason, status
+    FROM shift_exchange_requests
+    WHERE requester_id = {userId}
+      AND status = 'pending'
+    ORDER BY request_date DESC
     ```
 
 16. แสดงประวัติคำขอที่ผ่านมา (approved/rejected)
     - Query 16a (คำขอที่ส่งไป):
       ```sql
-      SELECT ser.exchange_id, ser.requester_id, ser.target_user_id,
-             ser.request_date, ser.reason, ser.status,
-             u.name as target_user_name,
-             s1.date as original_date, s1.shift_type as original_shift_type,
-             s2.date as target_date, s2.shift_type as target_shift_type,
-             'my' as type
-      FROM shift_exchange_requests ser
-      INNER JOIN users u ON ser.target_user_id = u.user_id
-      INNER JOIN schedules s1 ON ser.original_schedule_id = s1.schedules_id
-      LEFT JOIN schedules s2 ON ser.target_schedule_id = s2.schedules_id
-      WHERE ser.requester_id = {userId}
-        AND ser.status IN ('approved', 'rejected')
-      ORDER BY ser.request_date DESC
+      SELECT exchange_id, requester_id, target_user_id,
+             original_schedule_id, target_schedule_id,
+             request_date, reason, status
+      FROM shift_exchange_requests
+      WHERE requester_id = {userId}
+        AND status IN ('approved', 'rejected')
+      ORDER BY request_date DESC
       ```
     - Query 16b (คำขอที่ได้รับและตอบไปแล้ว):
       ```sql
-      SELECT ser.exchange_id, ser.requester_id, ser.target_user_id,
-             ser.request_date, ser.reason, ser.status,
-             u.name as requester_name,
-             s1.date as original_date, s1.shift_type as original_shift_type,
-             s2.date as target_date, s2.shift_type as target_shift_type,
-             'incoming' as type
-      FROM shift_exchange_requests ser
-      INNER JOIN users u ON ser.requester_id = u.user_id
-      INNER JOIN schedules s1 ON ser.original_schedule_id = s1.schedules_id
-      LEFT JOIN schedules s2 ON ser.target_schedule_id = s2.schedules_id
-      WHERE ser.target_user_id = {userId}
-        AND ser.status IN ('approved', 'rejected')
-      ORDER BY ser.request_date DESC
+      SELECT exchange_id, requester_id, target_user_id,
+             original_schedule_id, target_schedule_id,
+             request_date, reason, status
+      FROM shift_exchange_requests
+      WHERE target_user_id = {userId}
+        AND status IN ('approved', 'rejected')
+      ORDER BY request_date DESC
       ```
 
 ## Business Rules:

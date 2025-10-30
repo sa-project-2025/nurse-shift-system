@@ -63,41 +63,35 @@
 
 12. ดึงคำขอที่รอการอนุมัติ (status = 'pending')
     ```sql
-    SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date,
-           lr.leave_days, lr.leave_type, lr.reason, lr.status,
-           lr.request_date, lr.response_date, lr.approved_by,
-           u.name as approver_name
-    FROM leave_requests lr
-    LEFT JOIN users u ON lr.approved_by = u.user_id
-    WHERE lr.user_id = {userId}
-      AND lr.status = 'pending'
-    ORDER BY lr.request_date DESC
+    SELECT leave_id, user_id, start_date, end_date,
+           leave_days, leave_type, reason, status,
+           request_date, response_date, approved_by
+    FROM leave_requests
+    WHERE user_id = {userId}
+      AND status = 'pending'
+    ORDER BY request_date DESC
     ```
 
 14. ดึงคำขอที่อนุมัติแล้ว (status = 'approved')
     ```sql
-    SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date,
-           lr.leave_days, lr.leave_type, lr.reason, lr.status,
-           lr.request_date, lr.response_date, lr.approved_by,
-           u.name as approver_name
-    FROM leave_requests lr
-    LEFT JOIN users u ON lr.approved_by = u.user_id
-    WHERE lr.user_id = {userId}
-      AND lr.status = 'approved'
-    ORDER BY lr.request_date DESC
+    SELECT leave_id, user_id, start_date, end_date,
+           leave_days, leave_type, reason, status,
+           request_date, response_date, approved_by
+    FROM leave_requests
+    WHERE user_id = {userId}
+      AND status = 'approved'
+    ORDER BY request_date DESC
     ```
 
 16. ดึงคำขอที่ไม่อนุมัติ (status = 'rejected')
     ```sql
-    SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date,
-           lr.leave_days, lr.leave_type, lr.reason, lr.reason_reject,
-           lr.status, lr.request_date, lr.response_date, lr.approved_by,
-           u.name as approver_name
-    FROM leave_requests lr
-    LEFT JOIN users u ON lr.approved_by = u.user_id
-    WHERE lr.user_id = {userId}
-      AND lr.status = 'rejected'
-    ORDER BY lr.request_date DESC
+    SELECT leave_id, user_id, start_date, end_date,
+           leave_days, leave_type, reason, reason_reject,
+           status, request_date, response_date, approved_by
+    FROM leave_requests
+    WHERE user_id = {userId}
+      AND status = 'rejected'
+    ORDER BY request_date DESC
     ```
 
 17. แสดงรายการคำขอทั้งหมด
@@ -105,14 +99,12 @@
 
 18. ดึงคำขอทั้งหมด (all status)
     ```sql
-    SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date,
-           lr.leave_days, lr.leave_type, lr.reason, lr.reason_reject,
-           lr.status, lr.request_date, lr.response_date, lr.approved_by,
-           u.name as approver_name
-    FROM leave_requests lr
-    LEFT JOIN users u ON lr.approved_by = u.user_id
-    WHERE lr.user_id = {userId}
-    ORDER BY lr.request_date DESC
+    SELECT leave_id, user_id, start_date, end_date,
+           leave_days, leave_type, reason, reason_reject,
+           status, request_date, response_date, approved_by
+    FROM leave_requests
+    WHERE user_id = {userId}
+    ORDER BY request_date DESC
     ```
 
 ## Business Rules:

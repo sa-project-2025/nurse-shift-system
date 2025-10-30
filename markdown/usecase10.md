@@ -17,15 +17,17 @@
 ## System Actions:
 2. ดึงคำขอลาที่สถานะรอการอนุมัติ (status = 'pending')
    ```sql
-   SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date,
-          lr.leave_days, lr.leave_type, lr.reason, lr.status,
-          lr.request_date,
-          u.name as requester_name, u.email as requester_email
-   FROM leave_requests lr
-   INNER JOIN users u ON lr.user_id = u.user_id
-   WHERE u.department_id = {departmentId}
-     AND lr.status = 'pending'
-   ORDER BY lr.request_date ASC
+   SELECT leave_id, user_id, start_date, end_date,
+          leave_days, leave_type, reason, status,
+          request_date
+   FROM leave_requests
+   WHERE user_id IN (
+     SELECT user_id
+     FROM users
+     WHERE department_id = {departmentId}
+   )
+     AND status = 'pending'
+   ORDER BY request_date ASC
    ```
 
 4. แสดงรายการคำขอพร้อมรายละเอียด
@@ -94,40 +96,46 @@
 
 8. ดึงคำขอที่อนุมัติแล้ว (status = 'approved')
    ```sql
-   SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date,
-          lr.leave_days, lr.leave_type, lr.reason, lr.status,
-          lr.request_date, lr.response_date,
-          u.name as requester_name
-   FROM leave_requests lr
-   INNER JOIN users u ON lr.user_id = u.user_id
-   WHERE u.department_id = {departmentId}
-     AND lr.status = 'approved'
-   ORDER BY lr.response_date DESC
+   SELECT leave_id, user_id, start_date, end_date,
+          leave_days, leave_type, reason, status,
+          request_date, response_date
+   FROM leave_requests
+   WHERE user_id IN (
+     SELECT user_id
+     FROM users
+     WHERE department_id = {departmentId}
+   )
+     AND status = 'approved'
+   ORDER BY response_date DESC
    ```
 
 10. ดึงคำขอที่ปฏิเสธแล้ว (status = 'rejected')
     ```sql
-    SELECT lr.leave_id, lr.user_id, lr.start_date, lr.end_date,
-           lr.leave_days, lr.leave_type, lr.reason, lr.reason_reject,
-           lr.status, lr.request_date, lr.response_date,
-           u.name as requester_name
-    FROM leave_requests lr
-    INNER JOIN users u ON lr.user_id = u.user_id
-    WHERE u.department_id = {departmentId}
-      AND lr.status = 'rejected'
-    ORDER BY lr.response_date DESC
+    SELECT leave_id, user_id, start_date, end_date,
+           leave_days, leave_type, reason, reason_reject,
+           status, request_date, response_date
+    FROM leave_requests
+    WHERE user_id IN (
+      SELECT user_id
+      FROM users
+      WHERE department_id = {departmentId}
+    )
+      AND status = 'rejected'
+    ORDER BY response_date DESC
     ```
 
 12. ดึงคำขอทั้งหมด (all status)
-    ```sql.
-    SELECT lrleave_id, lr.user_id, lr.start_date, lr.end_date,
-           lr.leave_days, lr.leave_type, lr.reason, lr.reason_reject,
-           lr.status, lr.request_date, lr.response_date,
-           u.name as requester_name
-    FROM leave_requests lr
-    INNER JOIN users u ON lr.user_id = u.user_id
-    WHERE u.department_id = {departmentId}
-    ORDER BY lr.request_date DESC
+    ```sql
+    SELECT leave_id, user_id, start_date, end_date,
+           leave_days, leave_type, reason, reason_reject,
+           status, request_date, response_date
+    FROM leave_requests
+    WHERE user_id IN (
+      SELECT user_id
+      FROM users
+      WHERE department_id = {departmentId}
+    )
+    ORDER BY request_date DESC
     ```
 
 ## Business Rules:

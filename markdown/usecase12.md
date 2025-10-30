@@ -8,33 +8,27 @@
 ## System Actions:
 2. ดึงรายงานการทำงานของเดือนปัจจุบัน
    ```sql
-   SELECT wr.work_report_id, wr.user_id, wr.report_month,
-          wr.work_days_count, wr.shifts_count, wr.total_hours,
-          wr.morning_shifts, wr.afternoon_shifts, wr.night_shifts,
-          wr.rest_days, wr.submitted_at,
-          u.name as user_name, u.email
-   FROM work_reports wr
-   INNER JOIN users u ON wr.user_id = u.user_id
-   WHERE wr.user_id = {userId}
-     AND wr.report_month = '{currentMonth}'
-   ORDER BY wr.report_month DESC
+   SELECT work_report_id, user_id, report_month,
+          work_days_count, shifts_count, total_hours,
+          morning_shifts, afternoon_shifts, night_shifts,
+          rest_days, submitted_at
+   FROM work_reports
+   WHERE user_id = {userId}
+     AND report_month = '{currentMonth}'
+   ORDER BY report_month DESC
    ```
    - ถ้ายังไม่ได้บันทึก → แสดงข้อความ "ยังไม่มีรายงานในเดือนนี้"
    - ถ้ามีแล้ว → แสดงข้อมูลรายงาน
 
 4. ดึงรายงานการทำงานของเดือนที่เลือก
    ```sql
-   SELECT wr.work_report_id, wr.user_id, wr.report_month,
-          wr.work_days_count, wr.shifts_count, wr.total_hours,
-          wr.morning_shifts, wr.afternoon_shifts, wr.night_shifts,
-          wr.rest_days, wr.submitted_at,
-          u.name as user_name, u.email,
-          d.department_name
-   FROM work_reports wr
-   INNER JOIN users u ON wr.user_id = u.user_id
-   LEFT JOIN departments d ON u.department_id = d.department_id
-   WHERE wr.user_id = {userId}
-     AND wr.report_month = '{selectedMonth}'
+   SELECT work_report_id, user_id, report_month,
+          work_days_count, shifts_count, total_hours,
+          morning_shifts, afternoon_shifts, night_shifts,
+          rest_days, submitted_at
+   FROM work_reports
+   WHERE user_id = {userId}
+     AND report_month = '{selectedMonth}'
    ```
    - พร้อมดึงรายละเอียดเวรที่ทำในเดือนนั้น:
      ```sql
