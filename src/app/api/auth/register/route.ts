@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json({
-        message: 'สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี',
+        message: 'ลงทะเบียนผู้ใช้สำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี',
         user: authData.user
       })
     }
@@ -67,6 +67,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'ไม่สามารถสร้างผู้ใช้ได้' }, { status: 500 })
   } catch (error) {
     console.error('Registration error:', error)
-    return NextResponse.json({ error: 'เกิดข้อผิดพลาดในการสมัครสมาชิก' }, { status: 500 })
+    return NextResponse.json({ error: 'เกิดข้อผิดพลาดในการลงทะเบียนผู้ใช้' }, { status: 500 })
   }
 }

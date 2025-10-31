@@ -119,7 +119,7 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'เกิดข้อผิดพลาดในการสมัครสมาชิก')
+        setError(data.error || 'เกิดข้อผิดพลาดในการลงทะเบียนผู้ใช้')
         return
       }
 
@@ -142,7 +142,7 @@ export default function RegisterPage() {
       }, 3000)
     } catch (err) {
       console.error('Registration error:', err)
-      setError('เกิดข้อผิดพลาดในการสมัครสมาชิก')
+      setError('เกิดข้อผิดพลาดในการลงทะเบียนผู้ใช้ใหม่')
     } finally {
       setLoading(false)
     }
@@ -164,7 +164,7 @@ export default function RegisterPage() {
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            สมัครสมาชิก
+            ลงทะเบียนผู้ใช้งานใหม่
           </h1>
           <p className="text-gray-600">สร้างบัญชีใหม่สำหรับระบบจัดการตารางเวรพยาบาล</p>
         </div>
@@ -334,7 +334,7 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outlFne-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'กำลังสมัครสมาชิก...' : 'สมัครสมาชิก'}
+            {loading ? 'กำลังสมัครลงทะเบียนผู้ใช้...' : 'ลงทะเบียนผู้ใช้'}
           </button>
         </form>
 

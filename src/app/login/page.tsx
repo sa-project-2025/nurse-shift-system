@@ -125,7 +125,7 @@ export default function LoginPage() {
           <p className="text-sm text-gray-600">
             ยังไม่มีบัญชี?{' '}
             <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
-              สมัครสมาชิก
+              ลงทะเบียนผู้ใช้งานใหม่
             </Link>
           </p>
         </div>

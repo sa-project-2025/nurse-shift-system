@@ -21,7 +21,8 @@ Q 4.2 :
 SELECT schedules_id, date, shift_type, status, required_nurse,department_id, created_by, published_date
 FROM schedules
 WHERE department_id = {dept_id}
-AND date >= '{startDate}' AND date <= '{endDate}'
+AND date >= '{startDate}' 
+AND date <= '{endDate}'
 AND status IN ('draft', 'published')
 ORDER BY date
 Q 4.3 : 
@@ -29,8 +30,6 @@ SELECT sa.assignment_id, sa.schedules_id,u.user_id, u.name, u.email
 FROM shift_assignments sa
 INNER JOIN users u ON sa.user_id = u.user_id
 WHERE sa.schedules_id IN ({scheduleIds})
-
-
 6.เก็บค่าที่ตั้งไว้สำหรับการสร้างตารางเวร
   - เก็บค่า: morning_required, afternoon_required, night_required
 8.สร้างตารางเวรเปล่าสำหรับทั้งเดือน 
@@ -68,4 +67,6 @@ WHERE schedules_id = {schedule_id}
 Q4.9 :
 INSERT INTO shift_assignments (user_id, schedules_id, assigned_by, assigned_date)
 VALUES (...)
+
+
 

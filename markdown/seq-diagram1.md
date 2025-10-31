@@ -1,58 +1,52 @@
-# Sequence Diagram: Use Case 1 - Register (ลงทะเบียนผู้ใช้)
+# Sequence Diagram 1 - User Registration (ลงทะเบียนผู้ใช้)
 
 ```mermaid
 sequenceDiagram
     actor User
-    participant UI as :registerUI
-    participant DeptCtrl as :deptController
-    participant RegCtrl as :registerController
-    participant DB as :database
+    participant UI as :RegisterUI
+    participant Controller as :RegisterController
+    participant API as :AuthRegisterAPI
+    participant DB as :Database
+
+    Note over User,DB: Precondition: ผู้ใช้ยังไม่มีบัญชีในระบบ
 
     User->>UI: เข้าหน้าลงทะเบียน
     activate UI
-    UI->>DeptCtrl: GET departments
-    activate DeptCtrl
-    DeptCtrl->>DB: SELECT departments
+    UI->>UI: แสดงฟอร์มลงทะเบียน
+
+    UI->>API: GET /api/departments
+    activate API
+    API->>DB: Q1.1: SELECT department_id, department_name<br/>FROM departments
     activate DB
-    DB-->>DeptCtrl: รายการแผนก
+    DB-->>API: รายการแผนก
     deactivate DB
-    DeptCtrl-->>UI: { departments }
-    deactivate DeptCtrl
-    deactivate UI
+    API-->>UI: รายการแผนก
+    deactivate API
+    UI->>UI: แสดงรายการแผนกในฟอร์ม
 
-    User->>UI: กรอกข้อมูล
-    User->>UI: กดปุ่ม "สมัครสมาชิก"
+    User->>UI: กรอกข้อมูล:<br/>- ชื่อ-นามสกุล<br/>- อีเมล<br/>- รหัสผ่าน<br/>- เบอร์โทร<br/>- เลือกแผนก<br/>- เลือกบทบาท (nurse/head_nurse)
 
-    activate UI
-    UI->>UI: Validate ข้อมูล
+    User->>UI: กดปุ่ม "ลงทะเบียน"
+    UI->>Controller: ส่งข้อมูลการลงทะเบียน
+    activate Controller
+
+    Controller->>Controller: ตรวจสอบข้อมูลความถูกต้อง<br/>- ชื่อ (ห้ามว่าง)<br/>- อีเมล (ห้ามว่าง, รูปแบบถูกต้อง)<br/>- เบอร์โทร (ห้ามว่าง)<br/>- รหัสผ่าน (ห้ามว่าง, ≥8 ตัวอักษร)<br/>- รหัสผ่านซ้ำ (ตรงกัน)
 
     alt ข้อมูลไม่ถูกต้อง
-        UI->>UI: แสดง error
-    end
-
-    UI->>RegCtrl: POST register
-    deactivate UI
-    activate RegCtrl
-    RegCtrl->>DB: INSERT INTO auth.users<br/>(email, password)
-    activate DB
-    DB-->>RegCtrl: user created
-    deactivate DB
-
-    RegCtrl->>DB: INSERT INTO users<br/>(name, email, password,<br/>role, phone, department_id)
-    activate DB
-    DB-->>RegCtrl: profile created
-    deactivate DB
-
-    alt role = head_nurse
-        RegCtrl->>DB: UPDATE departments
+        Controller-->>UI: ส่ง error message
+        UI->>UI: แสดงข้อความผิดพลาด
+    else ข้อมูลถูกต้อง
+        Controller->>API: POST /api/auth/register
+        activate API
+        API->>DB: Q1.2: INSERT INTO users<br/>(name, email, password, role,<br/>phone, department_id)<br/>VALUES (...)
         activate DB
-        DB-->>RegCtrl: updated
+        DB-->>API: บันทึกสำเร็จ (user_id)
         deactivate DB
+        API-->>UI: ลงทะเบียนสำเร็จ
+        deactivate API
+        UI->>UI: แสดงข้อความสำเร็จ<br/>เปลี่ยนเส้นทางไปหน้า Login
     end
 
-    RegCtrl-->>UI: { success }
-    deactivate RegCtrl
-    activate UI
-    UI->>UI: redirect /login
+    deactivate Controller
     deactivate UI
 ```

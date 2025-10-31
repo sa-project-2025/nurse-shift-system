@@ -16,20 +16,21 @@ actor:
 system:
 2. แสดงฟอร์มลงทะเบียน
 3. ดึงข้อมูลแผนก
-SELECT department_id,department_name FROM departments
+Q 1.1 :
+SELECT department_id, department_name 
+FROM departments
 4. แสดงข้อมูลแผนก
-
 7. ตรวจสอบข้อมูลความถูกต้อง
   7.1 ตรวจสอบชื่อ (ห้ามว่าง)
   7.2 ตรวจสอบอีเมล (ห้ามว่าง)
   7.3 ตรวจสอบเบอร์โทร (ห้ามว่าง) 
   7.4 ตรวจสอบรหัสผ่าน (ห้ามว่าง ความยาวอย่าง   น้อย 8 ตัวอักษร)
   7.5 กรอกรหัสผ่านซ้ำ (ห้ามว่าง)
-
-
 9. บันทึกข้อมูล
+Q 1.2 : 
 INSERT INTO users 
 (name, email, password, role, phone, department_id) 
 VALUES (...)
 10. แสดงข้อความสำเร็จ
+
 

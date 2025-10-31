@@ -1,22 +1,23 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function HeadNurseDashboard() {
   const router = useRouter()
+  const [profile, setProfile] = useState<any>(null)
 
   useEffect(() => {
     // Check if user is logged in
     const user = localStorage.getItem('user')
-    const profile = localStorage.getItem('profile')
+    const profileData = localStorage.getItem('profile')
 
-    if (!user || !profile) {
+    if (!user || !profileData) {
       router.push('/login')
+    } else {
+      setProfile(JSON.parse(profileData))
     }
   }, [router])
-
-  const profile = JSON.parse(localStorage.getItem('profile') || '{}')
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -27,7 +28,7 @@ export default function HeadNurseDashboard() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Dashboard หัวหน้าพยาบาล</h1>
               <p className="text-sm text-gray-600">
-                ยินดีต้อนรับ {profile.name || 'หัวหน้าพยาบาล'}
+                ยินดีต้อนรับ {profile?.name || 'หัวหน้าพยาบาล'}
               </p>
             </div>
           </div>
