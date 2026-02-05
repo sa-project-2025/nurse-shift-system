@@ -69,21 +69,10 @@ export async function POST(request: NextRequest) {
 
     // สำหรับแต่ละคำขอ ดึงเวรที่จะถูกลบ
     const requestsWithSchedules = await Promise.all(
-      (requests || []).map(async (request: {
-        leave_id: number
-        user_id: number
-        start_date: string
-        end_date: string
-        leave_days: number
-        leave_type: string
-        reason: string
-        reason_reject: string | null
-        status: string
-        request_date: string
-        response_date: string | null
-        approved_by: number | null
-        users: { user_id: number; name: string; email: string; department_id: number } | null
-      }) => {
+      (requests || []).map(async (request) => {
+        // Extract user data (Supabase returns array for foreign key)
+        const userData = Array.isArray(request.users) ? request.users[0] : request.users
+
         // ดึง shift_assignments ของผู้ขอ
         const { data: assignments } = await supabaseAdmin
           .from('shift_assignments')
@@ -106,8 +95,8 @@ export async function POST(request: NextRequest) {
           return {
             leave_id: request.leave_id,
             user_id: request.user_id,
-            user_name: request.users?.name || 'Unknown',
-            user_email: request.users?.email || '',
+            user_name: userData?.name || 'Unknown',
+            user_email: userData?.email || '',
             start_date: request.start_date,
             end_date: request.end_date,
             leave_days: request.leave_days,
@@ -125,8 +114,8 @@ export async function POST(request: NextRequest) {
         return {
           leave_id: request.leave_id,
           user_id: request.user_id,
-          user_name: request.users?.name || 'Unknown',
-          user_email: request.users?.email || '',
+          user_name: userData?.name || 'Unknown',
+          user_email: userData?.email || '',
           start_date: request.start_date,
           end_date: request.end_date,
           leave_days: request.leave_days,

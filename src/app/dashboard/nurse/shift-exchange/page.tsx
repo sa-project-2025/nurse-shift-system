@@ -11,6 +11,19 @@ const SHIFT_TYPES = {
 
 type ShiftType = 'morning' | 'afternoon' | 'night'
 
+// Common reasons for shift exchange
+const COMMON_REASONS = [
+  'มีธุระส่วนตัวเร่งด่วน',
+  'ต้องดูแลบุตรหลาน',
+  'ต้องพาครอบครัวไปพบแพทย์',
+  'มีนัดสอบ/เรียน',
+  'ต้องเข้าร่วมงานสำคัญ',
+  'ไม่สบาย',
+  'ต้องดูแลผู้ป่วยในครอบครัว',
+  'มีกิจธุระนอกเมือง',
+  'อื่นๆ (โปรดระบุ)'
+]
+
 interface Schedule {
   assignment_id: string
   schedules_id: string
@@ -69,6 +82,8 @@ export default function ShiftExchangePage() {
   const [selectedTargetSchedule, setSelectedTargetSchedule] = useState<AllSchedule | null>(null)
   const [selectedNurse, setSelectedNurse] = useState<Nurse | null>(null)
   const [reason, setReason] = useState('')
+  const [reasonType, setReasonType] = useState<'preset' | 'custom'>('preset')
+  const [selectedPresetReason, setSelectedPresetReason] = useState('')
 
   // Requests lists
   const [myRequests, setMyRequests] = useState<ExchangeRequest[]>([])
@@ -221,7 +236,10 @@ export default function ShiftExchangePage() {
   }
 
   const handleSubmitRequest = async () => {
-    if (!selectedMySchedule || !selectedTargetSchedule || !selectedNurse || !reason.trim()) {
+    // Determine final reason
+    const finalReason = reasonType === 'preset' ? selectedPresetReason : reason
+
+    if (!selectedMySchedule || !selectedTargetSchedule || !selectedNurse || !finalReason.trim()) {
       showToast('warning', 'ข้อมูลไม่ครบ', 'กรุณาเลือกเวรและพยาบาลที่ต้องการแลก และกรอกเหตุผล')
       return
     }
@@ -236,7 +254,7 @@ export default function ShiftExchangePage() {
           targetUserId: selectedNurse.user_id,
           originalScheduleId: selectedMySchedule.schedules_id,
           targetScheduleId: selectedTargetSchedule.schedules_id,
-          reason
+          reason: finalReason
         })
       })
 
@@ -248,6 +266,8 @@ export default function ShiftExchangePage() {
         setSelectedTargetSchedule(null)
         setSelectedNurse(null)
         setReason('')
+        setReasonType('preset')
+        setSelectedPresetReason('')
         loadMyRequests()
       } else {
         const data = await response.json()
@@ -790,17 +810,87 @@ export default function ShiftExchangePage() {
 
                   <h3 className="text-lg font-semibold text-black mb-4">ขั้นตอนที่ 4: กรอกเหตุผลในการขอแลกเวร</h3>
 
-                  <textarea
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg text-black mb-4"
-                    rows={4}
-                    placeholder="กรอกเหตุผลในการขอแลกเวร..."
-                  />
+                  {/* Reason Type Selection */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">เลือกวิธีกรอกเหตุผล</label>
+                    <div className="flex space-x-4">
+                      <button
+                        onClick={() => setReasonType('preset')}
+                        className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
+                          reasonType === 'preset'
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                        }`}
+                      >
+                        📋 เลือกจากรายการ
+                      </button>
+                      <button
+                        onClick={() => setReasonType('custom')}
+                        className={`flex-1 px-4 py-2 rounded-lg border transition-colors ${
+                          reasonType === 'custom'
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                        }`}
+                      >
+                        ✏️ พิมพ์เอง
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Preset Reasons Dropdown */}
+                  {reasonType === 'preset' && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">เหตุผลในการขอแลกเวร</label>
+                      <select
+                        value={selectedPresetReason}
+                        onChange={(e) => setSelectedPresetReason(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">-- เลือกเหตุผล --</option>
+                        {COMMON_REASONS.map((reason, index) => (
+                          <option key={index} value={reason}>
+                            {reason}
+                          </option>
+                        ))}
+                      </select>
+
+                      {selectedPresetReason === 'อื่นๆ (โปรดระบุ)' && (
+                        <div className="mt-3">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">โปรดระบุเหตุผล</label>
+                          <textarea
+                            value={reason}
+                            onChange={(e) => setReason(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows={3}
+                            placeholder="กรอกเหตุผลเพิ่มเติม..."
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Custom Reason Textarea */}
+                  {reasonType === 'custom' && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">เหตุผลในการขอแลกเวร</label>
+                      <textarea
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={4}
+                        placeholder="กรอกเหตุผลในการขอแลกเวร..."
+                      />
+                    </div>
+                  )}
 
                   <button
                     onClick={handleSubmitRequest}
-                    disabled={loading || !reason.trim()}
+                    disabled={
+                      loading ||
+                      (reasonType === 'preset' && !selectedPresetReason) ||
+                      (reasonType === 'preset' && selectedPresetReason === 'อื่นๆ (โปรดระบุ)' && !reason.trim()) ||
+                      (reasonType === 'custom' && !reason.trim())
+                    }
                     className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
                   >
                     ส่งคำขอแลกเวร
