@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         .select(`
           assignment_id,
           schedules_id,
-          users!shift_assignment_user_id_fkey(user_id, name, email)
+          users!shift_assignment_user_id_fkey(user_id, name, email, pic_profile)
         `)
         .in('schedules_id', scheduleIds)
 
@@ -69,7 +69,8 @@ export async function POST(request: NextRequest) {
             assignment_id: assignment.assignment_id,
             user_id: userInfo.user_id,
             name: userInfo.name,
-            email: userInfo.email
+            email: userInfo.email,
+            pic_profile: (userInfo as any).pic_profile ?? null
           }
         })
 

@@ -35,6 +35,12 @@ const ArrowRightOnRectangleIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
+const UserCircleIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+)
+
 const DocumentTextIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -57,6 +63,11 @@ const navigation = [
     href: '/dashboard/head-nurse/nurse-reports',
     icon: ChartBarIcon,
   },
+  {
+    name: 'โปรไฟล์ของฉัน',
+    href: '/dashboard/head-nurse/profile',
+    icon: UserCircleIcon,
+  },
 ]
 
 export default function HeadNurseLayout({
@@ -65,7 +76,7 @@ export default function HeadNurseLayout({
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [profile, setProfile] = useState<{user_id?: number, name?: string, email?: string, department_id?: number}>({})
+  const [profile, setProfile] = useState<{user_id?: number, name?: string, email?: string, department_id?: number, pic_profile?: string | null}>({})
   const [pendingLeaveCount, setPendingLeaveCount] = useState(0)
   const pathname = usePathname()
   const router = useRouter()
@@ -181,9 +192,18 @@ export default function HeadNurseLayout({
               </div>
 
               {/* User info */}
-              <div className="mt-4 px-4 py-3 bg-gray-50 mx-4 rounded-lg">
-                <p className="text-sm font-medium text-gray-900">{profile.name || 'Loading...'}</p>
-                <p className="text-xs text-gray-500">{profile.email || ''}</p>
+              <div className="mt-4 px-4 py-3 bg-gray-50 mx-4 rounded-lg flex items-center gap-3">
+                {profile.pic_profile ? (
+                  <img src={profile.pic_profile} alt="profile" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-blue-200 flex items-center justify-center flex-shrink-0">
+                    <span className="text-blue-700 font-semibold text-sm">{profile.name?.charAt(0) || '?'}</span>
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{profile.name || 'Loading...'}</p>
+                  <p className="text-xs text-gray-500 truncate">{profile.email || ''}</p>
+                </div>
               </div>
 
               <nav className="mt-5 flex-1 px-2 space-y-1">

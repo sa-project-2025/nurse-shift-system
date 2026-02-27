@@ -24,6 +24,7 @@ interface Nurse {
   user_id: number
   name: string
   email: string
+  pic_profile?: string | null
 }
 
 interface Schedule {
@@ -75,10 +76,19 @@ function DraggableNurse({ nurse, onAssign, isDragging }: DraggableNurseProps) {
       <div
         {...attributes}
         {...listeners}
-        className="flex-1 cursor-move py-1"
+        className="flex-1 cursor-move py-1 flex items-center gap-2"
       >
-        <p className="text-sm font-medium text-black">{nurse.name}</p>
-        <p className="text-xs text-black">{nurse.email}</p>
+        {nurse.pic_profile ? (
+          <img src={nurse.pic_profile} alt={nurse.name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+        ) : (
+          <div className="w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+            <span className="text-gray-600 text-xs font-semibold">{nurse.name.charAt(0)}</span>
+          </div>
+        )}
+        <div>
+          <p className="text-sm font-medium text-black">{nurse.name}</p>
+          <p className="text-xs text-black">{nurse.email}</p>
+        </div>
       </div>
       {onAssign && (
         <button
@@ -595,13 +605,14 @@ export default function ScheduleManagementPage() {
   }
 
   const getNurseStats = () => {
-    const stats = new Map<number, { name: string; email: string; shifts: number; hours: number }>()
+    const stats = new Map<number, { name: string; email: string; pic_profile?: string | null; shifts: number; hours: number }>()
 
     // Initialize with all available nurses
     availableNurses.forEach(nurse => {
       stats.set(nurse.user_id, {
         name: nurse.name,
         email: nurse.email,
+        pic_profile: nurse.pic_profile ?? null,
         shifts: 0,
         hours: 0
       })
@@ -1247,12 +1258,16 @@ export default function ScheduleManagementPage() {
 
                     return (
                       <div className="space-y-2">
-                        {schedule.assigned_nurses.map((nurse, index) => (
+                        {schedule.assigned_nurses.map((nurse) => (
                           <div key={nurse.user_id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
                             <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center">
-                                <span className="text-xs font-medium text-blue-700">{index + 1}</span>
-                              </div>
+                              {nurse.pic_profile ? (
+                                <img src={nurse.pic_profile} alt={nurse.name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                              ) : (
+                                <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-xs font-medium text-blue-700">{nurse.name.charAt(0)}</span>
+                                </div>
+                              )}
                               <div>
                                 <p className="text-sm font-medium text-blue-900">{nurse.name}</p>
                                 <p className="text-xs text-blue-600">{nurse.email}</p>
@@ -1301,9 +1316,18 @@ export default function ScheduleManagementPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{stat.name}</p>
-                        <p className="text-xs text-gray-600">{stat.email}</p>
+                      <div className="flex items-center gap-2 flex-1">
+                        {stat.pic_profile ? (
+                          <img src={stat.pic_profile} alt={stat.name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center flex-shrink-0">
+                            <span className="text-blue-700 font-semibold text-xs">{stat.name.charAt(0)}</span>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{stat.name}</p>
+                          <p className="text-xs text-gray-600">{stat.email}</p>
+                        </div>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold text-gray-900">
@@ -1394,12 +1418,16 @@ export default function ScheduleManagementPage() {
                       <h4 className="text-sm font-medium text-gray-800 mb-3">รายชื่อพยาบาลที่จัดเวร</h4>
                       {schedule?.assigned_nurses.length ? (
                         <div className="space-y-2">
-                          {schedule.assigned_nurses.map((nurse, index) => (
-                            <div key={nurse.user_id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          {schedule.assigned_nurses.map((nurse) => (
+                            <div key={nurse.user_id} className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
                               <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center">
-                                  <span className="text-xs font-medium text-blue-700">{index + 1}</span>
-                                </div>
+                                {nurse.pic_profile ? (
+                                  <img src={nurse.pic_profile} alt={nurse.name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                                ) : (
+                                  <div className="w-8 h-8 bg-blue-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span className="text-xs font-medium text-blue-700">{nurse.name.charAt(0)}</span>
+                                  </div>
+                                )}
                                 <div>
                                   <p className="text-sm font-medium text-blue-900">{nurse.name}</p>
                                   <p className="text-xs text-blue-600">{nurse.email}</p>

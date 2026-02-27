@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
           users!shift_assignment_user_id_fkey (
             user_id,
             name,
-            email
+            email,
+            pic_profile
           )
         `)
         .in('schedules_id', scheduleIds)
@@ -78,7 +79,8 @@ export async function POST(request: NextRequest) {
           .map(c => ({
             user_id: c.users.user_id,
             name: c.users.name,
-            email: c.users.email
+            email: c.users.email,
+            pic_profile: c.users.pic_profile ?? null
           }))
 
         return {
