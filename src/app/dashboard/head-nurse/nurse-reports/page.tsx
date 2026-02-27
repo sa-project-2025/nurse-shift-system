@@ -6,6 +6,7 @@ interface NurseReport {
   user_id: number
   name: string
   email: string
+  pic_profile?: string | null
   work_days_count: number
   shifts_count: number
   total_hours: number
@@ -29,6 +30,7 @@ interface NurseWithSchedules {
   user_id: number
   name: string
   email: string
+  pic_profile?: string | null
   schedules: Record<string, string> // date -> shift_type
 }
 
@@ -339,8 +341,19 @@ export default function NurseReportsPage() {
             {matrixNurses.map((nurse) => (
               <tr key={nurse.user_id} className="hover:bg-gray-50">
                 <td className="px-3 py-2 sticky left-0 bg-white border-r border-gray-300 z-10">
-                  <div className="text-sm font-medium text-gray-900">{nurse.name}</div>
-                  <div className="text-xs text-gray-500 truncate max-w-[140px]">{nurse.email}</div>
+                  <div className="flex items-center gap-2">
+                    {nurse.pic_profile ? (
+                      <img src={nurse.pic_profile} alt={nurse.name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-blue-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-blue-700 font-semibold text-xs">{nurse.name.charAt(0)}</span>
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{nurse.name}</div>
+                      <div className="text-xs text-gray-500 truncate max-w-[110px]">{nurse.email}</div>
+                    </div>
+                  </div>
                 </td>
                 {days.map(day => {
                   const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
@@ -428,8 +441,19 @@ export default function NurseReportsPage() {
             {nurses.map((nurse) => (
               <tr key={nurse.user_id} className="hover:bg-gray-50">
                 <td className="px-4 py-3">
-                  <div className="text-sm font-medium text-gray-900">{nurse.name}</div>
-                  <div className="text-xs text-gray-500">{nurse.email}</div>
+                  <div className="flex items-center gap-3">
+                    {nurse.pic_profile ? (
+                      <img src={nurse.pic_profile} alt={nurse.name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-blue-700 font-semibold text-xs">{nurse.name.charAt(0)}</span>
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{nurse.name}</div>
+                      <div className="text-xs text-gray-500">{nurse.email}</div>
+                    </div>
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-center text-sm text-gray-900">{nurse.work_days_count}</td>
                 <td className="px-4 py-3 text-center text-sm font-semibold text-purple-600">{nurse.shifts_count}</td>
@@ -623,9 +647,18 @@ export default function NurseReportsPage() {
               {/* Header */}
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-t-lg">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold">{nurse.name}</h3>
-                    <p className="text-sm text-blue-100">{nurse.email}</p>
+                  <div className="flex items-center gap-3">
+                    {nurse.pic_profile ? (
+                      <img src={nurse.pic_profile} alt={nurse.name} className="w-10 h-10 rounded-full object-cover border-2 border-white flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-blue-300 flex items-center justify-center border-2 border-white flex-shrink-0">
+                        <span className="text-white font-semibold">{nurse.name.charAt(0)}</span>
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-lg font-semibold">{nurse.name}</h3>
+                      <p className="text-sm text-blue-100">{nurse.email}</p>
+                    </div>
                   </div>
                   {nurse.has_submitted ? (
                     <span className="px-2 py-1 bg-green-500 text-white text-xs rounded-full">
@@ -717,12 +750,21 @@ export default function NurseReportsPage() {
             {/* Modal Header */}
             <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-t-lg">
               <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-2xl font-bold">{selectedNurse.name}</h2>
-                  <p className="text-blue-100 mt-1">{selectedNurse.email}</p>
-                  <p className="text-sm text-blue-100 mt-2">
-                    เดือน: {generateMonthOptions().find(o => o.value === selectedPeriod)?.label}
-                  </p>
+                <div className="flex items-center gap-4">
+                  {selectedNurse.pic_profile ? (
+                    <img src={selectedNurse.pic_profile} alt={selectedNurse.name} className="w-14 h-14 rounded-full object-cover border-2 border-white flex-shrink-0" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-blue-400 flex items-center justify-center border-2 border-white flex-shrink-0">
+                      <span className="text-white font-bold text-xl">{selectedNurse.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <div>
+                    <h2 className="text-2xl font-bold">{selectedNurse.name}</h2>
+                    <p className="text-blue-100 mt-1">{selectedNurse.email}</p>
+                    <p className="text-sm text-blue-100 mt-2">
+                      เดือน: {generateMonthOptions().find(o => o.value === selectedPeriod)?.label}
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={handleCloseModal}

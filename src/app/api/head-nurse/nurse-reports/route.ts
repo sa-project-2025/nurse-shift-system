@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     // Get all nurses in the department
     const { data: nurses, error: nursesError } = await supabaseAdmin
       .from('users')
-      .select('user_id, name, email')
+      .select('user_id, name, email, pic_profile')
       .eq('department_id', department.department_id)
       .eq('role', 'nurse')
 
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
             user_id: nurse.user_id,
             name: nurse.name,
             email: nurse.email,
+            pic_profile: (nurse as any).pic_profile ?? null,
             work_days_count: workReport.work_days_count,
             shifts_count: workReport.shifts_count,
             total_hours: workReport.total_hours,
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
           user_id: nurse.user_id,
           name: nurse.name,
           email: nurse.email,
+          pic_profile: (nurse as any).pic_profile ?? null,
           work_days_count: stats.workDays,
           shifts_count: stats.totalShifts,
           total_hours: stats.totalHours,

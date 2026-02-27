@@ -15,6 +15,7 @@ interface Colleague {
   user_id: number
   name: string
   email: string
+  pic_profile?: string | null
 }
 
 interface Schedule {
@@ -361,9 +362,13 @@ export default function MySchedulePage() {
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             {schedule.colleagues.map((colleague) => (
                               <div key={colleague.user_id} className="flex items-center space-x-3 p-3 bg-white rounded-lg">
-                                <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                                  <span className="text-gray-600 font-semibold">{colleague.name.charAt(0)}</span>
-                                </div>
+                                {colleague.pic_profile ? (
+                                  <img src={colleague.pic_profile} alt={colleague.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                                ) : (
+                                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span className="text-gray-600 font-semibold">{colleague.name.charAt(0)}</span>
+                                  </div>
+                                )}
                                 <div>
                                   <p className="font-medium text-black">{colleague.name}</p>
                                   <p className="text-sm text-gray-600">{colleague.email}</p>

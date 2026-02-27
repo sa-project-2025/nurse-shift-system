@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     const { data: nurses, error } = await supabaseAdmin
       .from('users')
-      .select('user_id, name, email')
+      .select('user_id, name, email, pic_profile')
       .eq('department_id', departmentId)
       .eq('role', 'nurse')
       .order('name')

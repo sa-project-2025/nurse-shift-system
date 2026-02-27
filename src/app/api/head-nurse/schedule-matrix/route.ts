@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // Step 1: Get all nurses in the department
     const { data: nurses, error: nursesError } = await supabaseAdmin
       .from('users')
-      .select('user_id, name, email')
+      .select('user_id, name, email, pic_profile')
       .eq('department_id', departmentId)
       .eq('role', 'nurse')
       .order('name', { ascending: true })
@@ -83,10 +83,11 @@ export async function POST(request: NextRequest) {
     })
 
     // Step 4: Format response with nurse info and their schedules
-    const nursesWithSchedules = nurses.map((nurse: { user_id: number; name: string; email: string }) => ({
+    const nursesWithSchedules = nurses.map((nurse: { user_id: number; name: string; email: string; pic_profile?: string | null }) => ({
       user_id: nurse.user_id,
       name: nurse.name,
       email: nurse.email,
+      pic_profile: nurse.pic_profile ?? null,
       schedules: scheduleMatrix[nurse.user_id] || {}
     }))
 
