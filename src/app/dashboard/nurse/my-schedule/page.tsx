@@ -1,12 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import {
+  SunriseIcon, SunIcon, MoonIcon, BeachIcon,
+  WarningIcon, CheckIcon,
+} from '@/components/icons'
 
 // Shift type constants
 const SHIFT_TYPES = {
-  morning: { label: 'เช้า', icon: '☀️', time: '06:00-14:00', color: 'bg-yellow-50 border-yellow-200 text-yellow-900' },
-  afternoon: { label: 'บ่าย', icon: '🌤️', time: '14:00-22:00', color: 'bg-blue-50 border-blue-200 text-blue-900' },
-  night: { label: 'ดึก', icon: '🌙', time: '22:00-06:00', color: 'bg-purple-50 border-purple-200 text-purple-900' },
+  morning: { label: 'เช้า', icon: SunriseIcon, time: '06:00-14:00', color: 'bg-yellow-50 border-yellow-200 text-yellow-900' },
+  afternoon: { label: 'บ่าย', icon: SunIcon, time: '14:00-22:00', color: 'bg-blue-50 border-blue-200 text-blue-900' },
+  night: { label: 'ดึก', icon: MoonIcon, time: '22:00-06:00', color: 'bg-purple-50 border-purple-200 text-purple-900' },
 }
 
 type ShiftType = 'morning' | 'afternoon' | 'night'
@@ -297,7 +301,7 @@ export default function MySchedulePage() {
         <div className={`mb-6 p-4 rounded-lg border-2 ${SHIFT_TYPES[todayShift.shift_type].color}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <span className="text-3xl">{SHIFT_TYPES[todayShift.shift_type].icon}</span>
+              {(() => { const I = SHIFT_TYPES[todayShift.shift_type].icon; return <I className="w-9 h-9 flex-shrink-0" /> })()}
               <div>
                 <p className="font-semibold text-black">วันนี้ - กะ{SHIFT_TYPES[todayShift.shift_type].label}</p>
                 <p className="text-sm text-black">{SHIFT_TYPES[todayShift.shift_type].time}</p>
@@ -314,7 +318,7 @@ export default function MySchedulePage() {
       {!todayShift && (
         <div className="mb-6 p-4 rounded-lg border-2 bg-green-50 border-green-200 text-green-900">
           <div className="flex items-center space-x-3">
-            <span className="text-3xl">🏖️</span>
+            <BeachIcon className="w-9 h-9 flex-shrink-0" />
             <div>
               <p className="font-semibold text-black">วันนี้ - วันหยุด</p>
               <p className="text-sm text-black">ไม่มีเวรในวันนี้</p>
@@ -348,7 +352,7 @@ export default function MySchedulePage() {
                   {daySchedules.map((schedule, idx) => (
                     <div key={idx} className={`p-6 rounded-lg border-2 ${SHIFT_TYPES[schedule.shift_type].color}`}>
                       <div className="flex items-center space-x-4 mb-6">
-                        <span className="text-6xl">{SHIFT_TYPES[schedule.shift_type].icon}</span>
+                        {(() => { const I = SHIFT_TYPES[schedule.shift_type].icon; return <I className="w-16 h-16 flex-shrink-0" /> })()}
                         <div>
                           <h3 className="text-2xl font-bold text-black">กะ{SHIFT_TYPES[schedule.shift_type].label}</h3>
                           <p className="text-xl text-black">{SHIFT_TYPES[schedule.shift_type].time}</p>
@@ -388,7 +392,7 @@ export default function MySchedulePage() {
               return (
                 <div className="p-6 rounded-lg border-2 bg-green-50 border-green-200">
                   <div className="flex items-center space-x-4">
-                    <span className="text-6xl">🏖️</span>
+                    <BeachIcon className="w-16 h-16 flex-shrink-0" />
                     <div>
                       <h3 className="text-2xl font-bold text-black">วันหยุด</h3>
                       <p className="text-lg text-black">ไม่มีเวรในวันนี้</p>
@@ -464,7 +468,7 @@ export default function MySchedulePage() {
                                   title={`กะ${SHIFT_TYPES[schedule.shift_type].label}`}
                                 >
                                   <div className="text-center">
-                                    <div className="text-lg">{SHIFT_TYPES[schedule.shift_type].icon}</div>
+                                    {(() => { const I = SHIFT_TYPES[schedule.shift_type].icon; return <I className="w-6 h-6 mx-auto mb-0.5" /> })()}
                                     <div className="text-xs font-medium">{SHIFT_TYPES[schedule.shift_type].label}</div>
                                   </div>
 
@@ -484,7 +488,7 @@ export default function MySchedulePage() {
                             </div>
                           ) : (
                             <div className="p-2 rounded-lg bg-green-50 border border-green-200 text-center">
-                              <div className="text-2xl mb-1">🏖️</div>
+                              <BeachIcon className="w-7 h-7 mx-auto mb-1" />
                               <div className="text-xs text-green-800 font-medium">หยุด</div>
                             </div>
                           )}
@@ -520,15 +524,15 @@ export default function MySchedulePage() {
 
               <div className="pt-3 border-t border-gray-200">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-black">☀️ กะเช้า</span>
+                  <span className="inline-flex items-center gap-1 text-sm text-black"><SunriseIcon className="w-4 h-4" /> กะเช้า</span>
                   <span className="text-sm font-semibold text-black">{stats?.morningShifts || 0} ครั้ง</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-black">🌤️ กะบ่าย</span>
+                  <span className="inline-flex items-center gap-1 text-sm text-black"><SunIcon className="w-4 h-4" /> กะบ่าย</span>
                   <span className="text-sm font-semibold text-black">{stats?.afternoonShifts || 0} ครั้ง</span>
                 </div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-black">🌙 กะดึก</span>
+                  <span className="inline-flex items-center gap-1 text-sm text-black"><MoonIcon className="w-4 h-4" /> กะดึก</span>
                   <span className="text-sm font-semibold text-black">{stats?.nightShifts || 0} ครั้ง</span>
                 </div>
               </div>
@@ -551,7 +555,7 @@ export default function MySchedulePage() {
                   disabled={loading || !stats || stats.totalShifts === 0}
                   className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2 font-medium"
                 >
-                  <span>✓</span>
+                  <CheckIcon className="w-5 h-5" />
                   <span>บันทึกการทำงาน</span>
                 </button>
                 <p className="text-xs text-gray-500 text-center mt-2">
@@ -587,8 +591,8 @@ export default function MySchedulePage() {
                 </div>
               </div>
 
-              <p className="text-sm text-red-600 mb-6">
-                ⚠️ หลังจากยืนยันแล้วจะไม่สามารถแก้ไขได้
+              <p className="flex items-center gap-1.5 text-sm text-red-600 mb-6">
+                <WarningIcon className="w-4 h-4 flex-shrink-0" /> หลังจากยืนยันแล้วจะไม่สามารถแก้ไขได้
               </p>
 
               <div className="flex space-x-3">

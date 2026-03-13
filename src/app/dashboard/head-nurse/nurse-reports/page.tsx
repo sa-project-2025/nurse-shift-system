@@ -1,6 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import {
+  SunriseIcon, SunIcon, MoonIcon, BeachIcon,
+  ClipboardIcon, ChartBarIcon, CalendarIcon,
+  WarningIcon, LightningIcon, CheckIcon, ClockIcon, DownloadIcon,
+} from '@/components/icons'
 
 interface NurseReport {
   user_id: number
@@ -35,9 +40,9 @@ interface NurseWithSchedules {
 }
 
 const SHIFT_TYPES = {
-  morning: { label: 'เช้า', icon: '☀️', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', time: '06:00-14:00' },
-  afternoon: { label: 'บ่าย', icon: '🌤️', color: 'bg-orange-100 text-orange-800 border-orange-300', time: '14:00-22:00' },
-  night: { label: 'ดึก', icon: '🌙', color: 'bg-indigo-100 text-indigo-800 border-indigo-300', time: '22:00-06:00' },
+  morning: { label: 'เช้า', icon: SunriseIcon, color: 'bg-yellow-100 text-yellow-800 border-yellow-300', time: '06:00-14:00' },
+  afternoon: { label: 'บ่าย', icon: SunIcon, color: 'bg-orange-100 text-orange-800 border-orange-300', time: '14:00-22:00' },
+  night: { label: 'ดึก', icon: MoonIcon, color: 'bg-indigo-100 text-indigo-800 border-indigo-300', time: '22:00-06:00' },
 }
 
 export default function NurseReportsPage() {
@@ -208,10 +213,10 @@ export default function NurseReportsPage() {
             {daySchedules.map((schedule) => (
               <div
                 key={schedule.assignment_id}
-                className={`text-xs p-1 rounded border ${SHIFT_TYPES[schedule.shift_type].color}`}
+                className={`flex items-center gap-1 text-xs p-1 rounded border ${SHIFT_TYPES[schedule.shift_type].color}`}
                 title={`กะ${SHIFT_TYPES[schedule.shift_type].label} (${SHIFT_TYPES[schedule.shift_type].time})`}
               >
-                {SHIFT_TYPES[schedule.shift_type].icon} {SHIFT_TYPES[schedule.shift_type].label}
+                {(() => { const I = SHIFT_TYPES[schedule.shift_type].icon; return <I className="w-3 h-3 flex-shrink-0" /> })()} {SHIFT_TYPES[schedule.shift_type].label}
               </div>
             ))}
           </div>
@@ -469,27 +474,32 @@ export default function NurseReportsPage() {
                       ? 'text-yellow-600'
                       : 'text-green-600'
                   }`}>
-                    {nurse.total_hours >= 176 ? '⚠️ เกิน' : nurse.total_hours >= 160 ? '⚡ ใกล้เกิน' : '✓ ปกติ'}
+                    {nurse.total_hours >= 176
+                      ? <span className="inline-flex items-center gap-1"><WarningIcon className="w-3 h-3" /> เกิน</span>
+                      : nurse.total_hours >= 160
+                      ? <span className="inline-flex items-center gap-1"><LightningIcon className="w-3 h-3" /> ใกล้เกิน</span>
+                      : <span className="inline-flex items-center gap-1 text-green-600"><CheckIcon className="w-3 h-3" /> ปกติ</span>
+                    }
                   </div>
                 </td>
                 <td className="px-4 py-3 text-center text-sm text-teal-700">{nurse.rest_days}</td>
                 <td className="px-4 py-3 text-center">
                   {nurse.has_submitted ? (
-                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
-                      ✓ ส่งแล้ว
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-500 text-white text-xs rounded-full font-medium">
+                      <CheckIcon className="w-3 h-3" /> ส่งแล้ว
                     </span>
                   ) : (
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
-                      ⏳ รอส่ง
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
+                      <ClockIcon className="w-3 h-3" /> รอส่ง
                     </span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-center print:hidden">
                   <button
                     onClick={() => handleViewDetail(nurse)}
-                    className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
                   >
-                    📅 ดูเวร
+                    <CalendarIcon className="w-3 h-3" /> ดูเวร
                   </button>
                 </td>
               </tr>
@@ -540,9 +550,9 @@ export default function NurseReportsPage() {
         <button
           onClick={viewMode === 'matrix' ? handleExportMatrix : handleExportPDF}
           disabled={viewMode === 'matrix' ? matrixNurses.length === 0 : nurses.length === 0}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed print:hidden"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed print:hidden"
         >
-          📥 Export PDF
+          <DownloadIcon className="w-4 h-4" /> Export PDF
         </button>
       </div>
 
@@ -598,33 +608,33 @@ export default function NurseReportsPage() {
       <div className="mb-6 flex items-center space-x-4 print:hidden">
         <button
           onClick={() => setViewMode('cards')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
             viewMode === 'cards'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
-          📋 การ์ด
+          <ClipboardIcon className="w-4 h-4" /> การ์ด
         </button>
         <button
           onClick={() => setViewMode('table')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
             viewMode === 'table'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
-          📊 ตาราง
+          <ChartBarIcon className="w-4 h-4" /> ตาราง
         </button>
         <button
           onClick={() => setViewMode('matrix')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
             viewMode === 'matrix'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
         >
-          📅 ตารางเวรรายวัน
+          <CalendarIcon className="w-4 h-4" /> ตารางเวรรายวัน
         </button>
       </div>
 
@@ -661,12 +671,12 @@ export default function NurseReportsPage() {
                     </div>
                   </div>
                   {nurse.has_submitted ? (
-                    <span className="px-2 py-1 bg-green-500 text-white text-xs rounded-full">
-                      ✓ ส่งแล้ว
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-500 text-white text-xs rounded-full">
+                      <CheckIcon className="w-3 h-3" /> ส่งแล้ว
                     </span>
                   ) : (
-                    <span className="px-2 py-1 bg-yellow-500 text-white text-xs rounded-full">
-                      รอส่ง
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-500 text-white text-xs rounded-full">
+                      <ClockIcon className="w-3 h-3" /> รอส่ง
                     </span>
                   )}
                 </div>
@@ -693,19 +703,19 @@ export default function NurseReportsPage() {
                 {/* Shift Breakdown */}
                 <div className="border-t border-gray-200 pt-3 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">🌅 กะเช้า</span>
+                    <span className="inline-flex items-center gap-1 text-sm text-gray-600"><SunriseIcon className="w-4 h-4" /> กะเช้า</span>
                     <span className="text-sm font-medium text-gray-800">{nurse.morning_shifts} กะ</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">☀️ กะบ่าย</span>
+                    <span className="inline-flex items-center gap-1 text-sm text-gray-600"><SunIcon className="w-4 h-4" /> กะบ่าย</span>
                     <span className="text-sm font-medium text-gray-800">{nurse.afternoon_shifts} กะ</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">🌙 กะดึก</span>
+                    <span className="inline-flex items-center gap-1 text-sm text-gray-600"><MoonIcon className="w-4 h-4" /> กะดึก</span>
                     <span className="text-sm font-medium text-gray-800">{nurse.night_shifts} กะ</span>
                   </div>
                   <div className="flex justify-between items-center border-t pt-2">
-                    <span className="text-sm text-gray-600">🏖️ วันหยุด</span>
+                    <span className="inline-flex items-center gap-1 text-sm text-gray-600"><BeachIcon className="w-4 h-4" /> วันหยุด</span>
                     <span className="text-sm font-medium text-teal-600">{nurse.rest_days} วัน</span>
                   </div>
                 </div>
@@ -733,9 +743,9 @@ export default function NurseReportsPage() {
                 {/* View Detail Button */}
                 <button
                   onClick={() => handleViewDetail(nurse)}
-                  className="mt-4 w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors print:hidden"
+                  className="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors print:hidden"
                 >
-                  📅 ดูตารางเวรรายวัน
+                  <CalendarIcon className="w-4 h-4" /> ดูตารางเวรรายวัน
                 </button>
               </div>
             </div>
@@ -813,20 +823,20 @@ export default function NurseReportsPage() {
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
                     <span className="font-medium text-gray-700">คำอธิบาย:</span>
                     <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded border text-xs ${SHIFT_TYPES.morning.color}`}>
-                        {SHIFT_TYPES.morning.icon} กะเช้า
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-xs ${SHIFT_TYPES.morning.color}`}>
+                        <SunriseIcon className="w-3 h-3" /> กะเช้า
                       </span>
                       <span className="text-gray-500 text-xs">06:00-14:00</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded border text-xs ${SHIFT_TYPES.afternoon.color}`}>
-                        {SHIFT_TYPES.afternoon.icon} กะบ่าย
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-xs ${SHIFT_TYPES.afternoon.color}`}>
+                        <SunIcon className="w-3 h-3" /> กะบ่าย
                       </span>
                       <span className="text-gray-500 text-xs">14:00-22:00</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded border text-xs ${SHIFT_TYPES.night.color}`}>
-                        {SHIFT_TYPES.night.icon} กะดึก
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-xs ${SHIFT_TYPES.night.color}`}>
+                        <MoonIcon className="w-3 h-3" /> กะดึก
                       </span>
                       <span className="text-gray-500 text-xs">22:00-06:00</span>
                     </div>

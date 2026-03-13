@@ -1,12 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import {
+  SunriseIcon, SunIcon, MoonIcon,
+  ClipboardIcon, PenIcon, CheckCircleIcon, XCircleIcon, DownloadIcon,
+} from '@/components/icons'
 
 // Shift type constants
 const SHIFT_TYPES = {
-  morning: { label: 'เช้า', icon: '☀️', time: '06:00-14:00', color: 'bg-yellow-50 border-yellow-200 text-yellow-900' },
-  afternoon: { label: 'บ่าย', icon: '🌤️', time: '14:00-22:00', color: 'bg-blue-50 border-blue-200 text-blue-900' },
-  night: { label: 'ดึก', icon: '🌙', time: '22:00-06:00', color: 'bg-purple-50 border-purple-200 text-purple-900' },
+  morning: { label: 'เช้า', icon: SunriseIcon, time: '06:00-14:00', color: 'bg-yellow-50 border-yellow-200 text-yellow-900' },
+  afternoon: { label: 'บ่าย', icon: SunIcon, time: '14:00-22:00', color: 'bg-blue-50 border-blue-200 text-blue-900' },
+  night: { label: 'ดึก', icon: MoonIcon, time: '22:00-06:00', color: 'bg-purple-50 border-purple-200 text-purple-900' },
 }
 
 type ShiftType = 'morning' | 'afternoon' | 'night'
@@ -412,11 +416,11 @@ export default function ShiftExchangePage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">🟡 รอตอบรับ</span>
+        return <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full"><span className="w-2 h-2 rounded-full bg-yellow-500 flex-shrink-0" /> รอตอบรับ</span>
       case 'approved':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">🟢 อนุมัติ</span>
+        return <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"><span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" /> อนุมัติ</span>
       case 'rejected':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">🔴 ปฏิเสธ</span>
+        return <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full"><span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" /> ปฏิเสธ</span>
       default:
         return null
     }
@@ -579,7 +583,7 @@ export default function ShiftExchangePage() {
                                           }`}
                                           onClick={() => setSelectedMySchedule(schedule)}
                                         >
-                                          <div className="text-lg">{SHIFT_TYPES[schedule.shift_type].icon}</div>
+                                          {(() => { const I = SHIFT_TYPES[schedule.shift_type].icon; return <I className="w-6 h-6 mx-auto" /> })()}
                                           <div className="text-xs">{SHIFT_TYPES[schedule.shift_type].label}</div>
                                         </div>
                                       )
@@ -678,7 +682,7 @@ export default function ShiftExchangePage() {
                                         setSelectedNurse(null)
                                       }}
                                     >
-                                      <div className="text-lg">{SHIFT_TYPES[targetSchedule.shift_type].icon}</div>
+                                      {(() => { const I = SHIFT_TYPES[targetSchedule.shift_type].icon; return <I className="w-6 h-6 mx-auto" /> })()}
                                       <div className="text-xs">{SHIFT_TYPES[targetSchedule.shift_type].label}</div>
                                       <div className="text-xs mt-1">{targetSchedule.nurses.length} คน</div>
                                     </div>
@@ -822,7 +826,7 @@ export default function ShiftExchangePage() {
                             : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
                         }`}
                       >
-                        📋 เลือกจากรายการ
+                        <span className="inline-flex items-center gap-1.5"><ClipboardIcon className="w-4 h-4" /> เลือกจากรายการ</span>
                       </button>
                       <button
                         onClick={() => setReasonType('custom')}
@@ -832,7 +836,7 @@ export default function ShiftExchangePage() {
                             : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
                         }`}
                       >
-                        ✏️ พิมพ์เอง
+                        <span className="inline-flex items-center gap-1.5"><PenIcon className="w-4 h-4" /> พิมพ์เอง</span>
                       </button>
                     </div>
                   </div>
@@ -985,16 +989,16 @@ export default function ShiftExchangePage() {
                       <button
                         onClick={() => handleRespondToRequest(request.exchange_id, 'approved')}
                         disabled={loading}
-                        className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+                        className="inline-flex items-center justify-center gap-2 flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
                       >
-                        ✅ ยอมรับ
+                        <CheckCircleIcon className="w-4 h-4" /> ยอมรับ
                       </button>
                       <button
                         onClick={() => handleRespondToRequest(request.exchange_id, 'rejected')}
                         disabled={loading}
-                        className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+                        className="inline-flex items-center justify-center gap-2 flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:bg-gray-400"
                       >
-                        ❌ ปฏิเสธ
+                        <XCircleIcon className="w-4 h-4" /> ปฏิเสธ
                       </button>
                     </div>
                   </div>
@@ -1057,7 +1061,7 @@ export default function ShiftExchangePage() {
                           <div key={`incoming-${request.exchange_id}`} className="border border-gray-200 rounded-lg p-4">
                             <div className="flex justify-between items-start mb-3">
                               <div>
-                                <p className="text-xs text-green-600 font-medium mb-1">📥 คำขอที่ได้รับ</p>
+                                <p className="inline-flex items-center gap-1 text-xs text-green-600 font-medium mb-1"><DownloadIcon className="w-3 h-3" /> คำขอที่ได้รับ</p>
                                 <p className="font-semibold text-black mb-1">
                                   จาก: {request.requester_name}
                                 </p>

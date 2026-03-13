@@ -1,20 +1,25 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import {
+  SunriseIcon, SunIcon, MoonIcon, BeachIcon,
+  SickIcon, ClipboardIcon, NoteIcon,
+  CheckCircleIcon, XCircleIcon, WarningIcon,
+} from '@/components/icons'
 
 // Leave type constants
 const LEAVE_TYPES = {
-  sick: { label: 'ลาป่วย', icon: '🤒', color: 'bg-red-50 border-red-200 text-red-900' },
-  personal: { label: 'ลากิจ', icon: '📋', color: 'bg-blue-50 border-blue-200 text-blue-900' },
-  vacation: { label: 'ลาพักร้อน', icon: '🏖️', color: 'bg-green-50 border-green-200 text-green-900' },
+  sick: { label: 'ลาป่วย', icon: SickIcon, color: 'bg-red-50 border-red-200 text-red-900' },
+  personal: { label: 'ลากิจ', icon: ClipboardIcon, color: 'bg-blue-50 border-blue-200 text-blue-900' },
+  vacation: { label: 'ลาพักร้อน', icon: BeachIcon, color: 'bg-green-50 border-green-200 text-green-900' },
 }
 
 type LeaveType = 'sick' | 'personal' | 'vacation' | string
 
 const SHIFT_TYPES = {
-  morning: { label: 'เช้า', icon: '☀️', time: '06:00-14:00' },
-  afternoon: { label: 'บ่าย', icon: '🌤️', time: '14:00-22:00' },
-  night: { label: 'ดึก', icon: '🌙', time: '22:00-06:00' },
+  morning: { label: 'เช้า', icon: SunriseIcon, time: '06:00-14:00' },
+  afternoon: { label: 'บ่าย', icon: SunIcon, time: '14:00-22:00' },
+  night: { label: 'ดึก', icon: MoonIcon, time: '22:00-06:00' },
 }
 
 type ShiftType = 'morning' | 'afternoon' | 'night'
@@ -182,11 +187,11 @@ export default function LeaveApprovalsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">🟡 รอการอนุมัติ</span>
+        return <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full"><span className="w-2 h-2 rounded-full bg-yellow-500 flex-shrink-0" /> รอการอนุมัติ</span>
       case 'approved':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">🟢 อนุมัติแล้ว</span>
+        return <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"><span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" /> อนุมัติแล้ว</span>
       case 'rejected':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">🔴 ไม่อนุมัติ</span>
+        return <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full"><span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" /> ไม่อนุมัติ</span>
       default:
         return null
     }
@@ -197,14 +202,14 @@ export default function LeaveApprovalsPage() {
       const type = LEAVE_TYPES[leaveType as keyof typeof LEAVE_TYPES]
       return (
         <div className="flex items-center space-x-2">
-          <span className="text-2xl">{type.icon}</span>
+          {(() => { const I = type.icon; return <I className="w-7 h-7 flex-shrink-0" /> })()}
           <span className="font-medium text-black">{type.label}</span>
         </div>
       )
     }
     return (
       <div className="flex items-center space-x-2">
-        <span className="text-2xl">📝</span>
+        <NoteIcon className="w-7 h-7 flex-shrink-0" />
         <span className="font-medium text-black">{leaveType}</span>
       </div>
     )
@@ -239,13 +244,13 @@ export default function LeaveApprovalsPage() {
 
       {request.affected_schedules && request.affected_schedules.length > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-3">
-          <p className="text-sm font-semibold text-black mb-2">
-            ⚠️ มีเวรในช่วงนี้ {request.affected_schedules.length} วัน:
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-black mb-2">
+            <WarningIcon className="w-4 h-4 flex-shrink-0" /> มีเวรในช่วงนี้ {request.affected_schedules.length} วัน:
           </p>
           <div className="space-y-1">
             {request.affected_schedules.slice(0, 3).map((schedule, idx) => (
               <div key={idx} className="flex items-center space-x-2 text-sm text-black">
-                <span>{SHIFT_TYPES[schedule.shift_type].icon}</span>
+                {(() => { const I = SHIFT_TYPES[schedule.shift_type].icon; return <I className="w-4 h-4 flex-shrink-0" /> })()}
                 <span>{formatDate(schedule.date)} - กะ{SHIFT_TYPES[schedule.shift_type].label}</span>
               </div>
             ))}
@@ -281,16 +286,16 @@ export default function LeaveApprovalsPage() {
           <button
             onClick={() => handleOpenModal(request, 'approve')}
             disabled={loading}
-            className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400 font-medium"
+            className="inline-flex items-center justify-center gap-2 flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-gray-400 font-medium"
           >
-            ✅ อนุมัติ
+            <CheckCircleIcon className="w-4 h-4" /> อนุมัติ
           </button>
           <button
             onClick={() => handleOpenModal(request, 'reject')}
             disabled={loading}
-            className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:bg-gray-400 font-medium"
+            className="inline-flex items-center justify-center gap-2 flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:bg-gray-400 font-medium"
           >
-            ❌ ปฏิเสธ
+            <XCircleIcon className="w-4 h-4" /> ปฏิเสธ
           </button>
         </div>
       )}
@@ -434,8 +439,8 @@ export default function LeaveApprovalsPage() {
 
             {modalAction === 'approve' && selectedRequest.affected_schedules && selectedRequest.affected_schedules.length > 0 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
-                <p className="text-sm font-semibold text-yellow-900 mb-2">
-                  ⚠️ เวร {selectedRequest.affected_schedules.length} วันจะถูกลบออกจากตาราง
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-yellow-900 mb-2">
+                  <WarningIcon className="w-4 h-4 flex-shrink-0" /> เวร {selectedRequest.affected_schedules.length} วันจะถูกลบออกจากตาราง
                 </p>
               </div>
             )}

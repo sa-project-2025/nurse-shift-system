@@ -1,21 +1,26 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import {
+  SunriseIcon, SunIcon, MoonIcon, BeachIcon,
+  SickIcon, ClipboardIcon, NoteIcon,
+  WarningIcon,
+} from '@/components/icons'
 
 // Leave type constants
 const LEAVE_TYPES = {
-  sick: { label: 'ลาป่วย', icon: '🤒', color: 'bg-red-50 border-red-200 text-red-900' },
-  personal: { label: 'ลากิจ', icon: '📋', color: 'bg-blue-50 border-blue-200 text-blue-900' },
-  vacation: { label: 'ลาพักร้อน', icon: '🏖️', color: 'bg-green-50 border-green-200 text-green-900' },
-  other: { label: 'ลาอื่นๆ', icon: '📝', color: 'bg-gray-50 border-gray-200 text-gray-900' },
+  sick: { label: 'ลาป่วย', icon: SickIcon, color: 'bg-red-50 border-red-200 text-red-900' },
+  personal: { label: 'ลากิจ', icon: ClipboardIcon, color: 'bg-blue-50 border-blue-200 text-blue-900' },
+  vacation: { label: 'ลาพักร้อน', icon: BeachIcon, color: 'bg-green-50 border-green-200 text-green-900' },
+  other: { label: 'ลาอื่นๆ', icon: NoteIcon, color: 'bg-gray-50 border-gray-200 text-gray-900' },
 }
 
 type LeaveType = 'sick' | 'personal' | 'vacation' | 'other'
 
 const SHIFT_TYPES = {
-  morning: { label: 'เช้า', icon: '☀️', time: '06:00-14:00', color: 'bg-yellow-50 border-yellow-200 text-yellow-900' },
-  afternoon: { label: 'บ่าย', icon: '🌤️', time: '14:00-22:00', color: 'bg-blue-50 border-blue-200 text-blue-900' },
-  night: { label: 'ดึก', icon: '🌙', time: '22:00-06:00', color: 'bg-purple-50 border-purple-200 text-purple-900' },
+  morning: { label: 'เช้า', icon: SunriseIcon, time: '06:00-14:00', color: 'bg-yellow-50 border-yellow-200 text-yellow-900' },
+  afternoon: { label: 'บ่าย', icon: SunIcon, time: '14:00-22:00', color: 'bg-blue-50 border-blue-200 text-blue-900' },
+  night: { label: 'ดึก', icon: MoonIcon, time: '22:00-06:00', color: 'bg-purple-50 border-purple-200 text-purple-900' },
 }
 
 type ShiftType = 'morning' | 'afternoon' | 'night'
@@ -230,11 +235,11 @@ export default function LeaveRequestPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">🟡 รอการอนุมัติ</span>
+        return <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full"><span className="w-2 h-2 rounded-full bg-yellow-500 flex-shrink-0" /> รอการอนุมัติ</span>
       case 'approved':
-        return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">🟢 อนุมัติแล้ว</span>
+        return <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"><span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" /> อนุมัติแล้ว</span>
       case 'rejected':
-        return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">🔴 ไม่อนุมัติ</span>
+        return <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full"><span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" /> ไม่อนุมัติ</span>
       default:
         return null
     }
@@ -251,7 +256,7 @@ export default function LeaveRequestPage() {
       return { icon: type.icon, label: type.label }
     }
     // Custom leave type
-    return { icon: '📝', label: leaveType }
+    return { icon: NoteIcon, label: leaveType }
   }
 
   const renderLeaveRequestCard = (request: LeaveRequest) => {
@@ -261,7 +266,7 @@ export default function LeaveRequestPage() {
       <div key={request.leave_id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
         <div className="flex justify-between items-start mb-3">
           <div className="flex items-center space-x-2">
-            <span className="text-2xl">{leaveTypeDisplay.icon}</span>
+            {(() => { const I = leaveTypeDisplay.icon; return <I className="w-7 h-7 flex-shrink-0" /> })()}
             <div>
               <p className="font-semibold text-black">{leaveTypeDisplay.label}</p>
               <p className="text-sm text-gray-600">
@@ -402,7 +407,7 @@ export default function LeaveRequestPage() {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <div className="text-3xl mb-2">{LEAVE_TYPES[type].icon}</div>
+                      {(() => { const I = LEAVE_TYPES[type].icon; return <I className="w-9 h-9 mx-auto mb-2" /> })()}
                       <div className="text-sm font-medium text-black">{LEAVE_TYPES[type].label}</div>
                     </button>
                   ))}
@@ -460,13 +465,13 @@ export default function LeaveRequestPage() {
               {/* Affected Schedules */}
               {affectedSchedules.length > 0 && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-sm font-semibold text-black mb-2">
-                    ⚠️ คุณมีเวรในช่วงนี้ {affectedSchedules.length} วัน:
+                  <p className="flex items-center gap-1.5 text-sm font-semibold text-black mb-2">
+                    <WarningIcon className="w-4 h-4 flex-shrink-0" /> คุณมีเวรในช่วงนี้ {affectedSchedules.length} วัน:
                   </p>
                   <div className="space-y-1">
                     {affectedSchedules.map((schedule, idx) => (
                       <div key={idx} className="flex items-center space-x-2 text-sm text-black">
-                        <span>{SHIFT_TYPES[schedule.shift_type].icon}</span>
+                        {(() => { const I = SHIFT_TYPES[schedule.shift_type].icon; return <I className="w-4 h-4 flex-shrink-0" /> })()}
                         <span>{formatDate(schedule.date)} - กะ{SHIFT_TYPES[schedule.shift_type].label}</span>
                       </div>
                     ))}

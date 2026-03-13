@@ -2,22 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { CheckCircleIcon, NoteIcon, WarningIcon } from '@/components/icons'
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
-  closestCenter,
+  MouseSensor,
+  TouchSensor,
+  pointerWithin,
+  useDraggable,
   useDroppable,
+  useSensor,
+  useSensors,
 } from '@dnd-kit/core'
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import {
-  useSortable,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 
 interface Nurse {
   assignment_id?: string  // Present in assigned nurses
@@ -48,36 +47,45 @@ const SHIFT_TYPES = [
 interface DraggableNurseProps {
   nurse: Nurse
   onAssign?: () => void
-  isDragging?: boolean
 }
 
-function DraggableNurse({ nurse, onAssign, isDragging }: DraggableNurseProps) {
+function DraggableNurse({ nurse, onAssign }: DraggableNurseProps) {
   const {
     attributes,
     listeners,
     setNodeRef,
-    transform,
-    transition,
-    isDragging: isSortableDragging,
-  } = useSortable({ id: nurse.user_id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging || isSortableDragging ? 0.5 : 1,
-  }
+    isDragging,
+  } = useDraggable({ id: nurse.user_id })
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className="flex items-center justify-between p-2 border rounded hover:bg-gray-50"
+      className={`flex items-center justify-between p-2 border rounded transition-all duration-150 ${
+        isDragging
+          ? 'border-dashed border-blue-400 opacity-30 bg-blue-50'
+          : 'border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm'
+      }`}
     >
+      {/* Drag handle */}
       <div
         {...attributes}
         {...listeners}
-        className="flex-1 cursor-move py-1 flex items-center gap-2"
+        className={`flex-shrink-0 p-1 mr-1 rounded text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-colors ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
+        title="ลากเพื่อจัดเวร"
       >
+        <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor">
+          <circle cx="2" cy="3" r="1.5"/>
+          <circle cx="8" cy="3" r="1.5"/>
+          <circle cx="2" cy="8" r="1.5"/>
+          <circle cx="8" cy="8" r="1.5"/>
+          <circle cx="2" cy="13" r="1.5"/>
+          <circle cx="8" cy="13" r="1.5"/>
+        </svg>
+      </div>
+
+      <div className="flex-1 flex items-center gap-2 min-w-0">
         {nurse.pic_profile ? (
           <img src={nurse.pic_profile} alt={nurse.name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
         ) : (
@@ -85,17 +93,17 @@ function DraggableNurse({ nurse, onAssign, isDragging }: DraggableNurseProps) {
             <span className="text-gray-600 text-xs font-semibold">{nurse.name.charAt(0)}</span>
           </div>
         )}
-        <div>
-          <p className="text-sm font-medium text-black">{nurse.name}</p>
-          <p className="text-xs text-black">{nurse.email}</p>
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-black truncate">{nurse.name}</p>
+          <p className="text-xs text-gray-500 truncate">{nurse.email}</p>
         </div>
       </div>
+
       {onAssign && (
         <button
           onClick={(e) => {
             e.stopPropagation()
             e.preventDefault()
-            console.log('Button clicked for:', nurse.name)
             onAssign()
           }}
           className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 ml-2 flex-shrink-0"
@@ -113,24 +121,31 @@ interface DropZoneProps {
   shift: string
   children?: React.ReactNode
   className?: string
+  isLarge?: boolean
 }
 
-function DropZone({ date, shift, children, className = '' }: DropZoneProps) {
+function DropZone({ date, shift, children, className = '', isLarge = false }: DropZoneProps) {
   const id = `${date}-${shift}`
-
-  const { isOver, setNodeRef } = useDroppable({
-    id: id,
-  })
+  const { isOver, setNodeRef } = useDroppable({ id })
 
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[60px] p-2 border-2 border-dashed border-gray-200 rounded-lg ${className} ${
-        isOver ? 'bg-blue-50 border-blue-300' : ''
+      className={`relative min-h-[60px] p-2 border-2 border-dashed rounded-lg transition-all duration-150 ${className} ${
+        isOver
+          ? 'border-blue-400 bg-blue-50/80 ring-2 ring-blue-300 ring-offset-1'
+          : 'border-gray-200'
       }`}
       data-drop-zone={id}
     >
       {children}
+      {isOver && isLarge && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none z-10">
+          <span className="bg-blue-500 text-white text-xs font-medium px-3 py-1 rounded-full shadow-md">
+            วางที่นี่
+          </span>
+        </div>
+      )}
     </div>
   )
 }
@@ -145,6 +160,7 @@ export default function ScheduleManagementPage() {
   const [loading, setLoading] = useState(false)
   const [activeId, setActiveId] = useState<number | null>(null)
   const [draggedNurse, setDraggedNurse] = useState<Nurse | null>(null)
+  const [activeDropZone, setActiveDropZone] = useState<string | null>(null)
   const [departmentName, setDepartmentName] = useState('')
   const [requiredNurses, setRequiredNurses] = useState({
     morning: 3,
@@ -366,6 +382,15 @@ export default function ScheduleManagementPage() {
     setLoading(false)
   }
 
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    })
+  )
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
     setActiveId(active.id as number)
@@ -373,10 +398,16 @@ export default function ScheduleManagementPage() {
     setDraggedNurse(nurse || null)
   }
 
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event
+    setActiveDropZone(over ? String(over.id) : null)
+  }
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     setActiveId(null)
     setDraggedNurse(null)
+    setActiveDropZone(null)
 
     if (!over) return
 
@@ -796,7 +827,7 @@ export default function ScheduleManagementPage() {
 
     showConfirmDialog(
       'ยกเลิกตารางเวรร่าง',
-      `คุณต้องการยกเลิกตารางเวรร่างทั้งหมดในเดือนนี้ใช่หรือไม่?\n\nจะลบไปทั้งหมด ${draftSchedules.length} รายการ\n\n⚠️ การกระทำนี้ไม่สามารถย้อนกลับได้`,
+      `คุณต้องการยกเลิกตารางเวรร่างทั้งหมดในเดือนนี้ใช่หรือไม่?\n\nจะลบไปทั้งหมด ${draftSchedules.length} รายการ\n\n[!] การกระทำนี้ไม่สามารถย้อนกลับได้`,
       async () => {
         setConfirmDialog(prev => ({ ...prev, show: false }))
         setLoading(true)
@@ -844,11 +875,13 @@ export default function ScheduleManagementPage() {
 
   return (
     <DndContext
-      collisionDetection={closestCenter}
+      sensors={sensors}
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="p-6">
+      <div className={`p-6 ${activeId ? '[&_*]:!cursor-grabbing' : ''}`}>
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-black">จัดตารางเวรพยาบาล</h1>
@@ -898,9 +931,9 @@ export default function ScheduleManagementPage() {
                   const completeSchedules = draftSchedules.length - incompleteSchedules.length
 
                   if (incompleteSchedules.length === 0) {
-                    return `✅ จัดเวรครบทั้งหมดแล้ว (${completeSchedules}/${draftSchedules.length}) - พร้อมประกาศ`
+                    return <span className="inline-flex items-center gap-1"><CheckCircleIcon className="w-4 h-4 flex-shrink-0" /> จัดเวรครบทั้งหมดแล้ว ({completeSchedules}/{draftSchedules.length}) - พร้อมประกาศ</span>
                   } else {
-                    return `⚠️ จัดเวรแล้ว ${completeSchedules}/${draftSchedules.length} - ขาดอีก ${incompleteSchedules.length} รายการ`
+                    return <span className="inline-flex items-center gap-1"><WarningIcon className="w-4 h-4 flex-shrink-0" /> จัดเวรแล้ว {completeSchedules}/{draftSchedules.length} - ขาดอีก {incompleteSchedules.length} รายการ</span>
                   }
                 })()}
               </p>
@@ -995,6 +1028,7 @@ export default function ScheduleManagementPage() {
                     key={index}
                     date={dateStr}
                     shift="general"
+                    isLarge={true}
                     className={`min-h-[80px] p-1 border cursor-pointer transition-all duration-150 ${
                       isCurrentMonth ? 'bg-white border-gray-200 hover:bg-gray-50 hover:shadow-sm' : 'bg-gray-50 text-black border-gray-100'
                     } ${isToday ? 'ring-2 ring-blue-300' : ''} ${
@@ -1050,8 +1084,12 @@ export default function ScheduleManagementPage() {
                                 </div>
                                 <div className="text-center mt-0.5">
                                   {schedule?.status === 'draft'
-                                    ? schedule.assigned_nurses.length >= schedule.required_nurse ? '✅' : '📝'
-                                    : schedule?.status === 'published' ? '✅' : ''
+                                    ? schedule.assigned_nurses.length >= schedule.required_nurse
+                                      ? <CheckCircleIcon className="w-4 h-4 mx-auto" />
+                                      : <NoteIcon className="w-4 h-4 mx-auto" />
+                                    : schedule?.status === 'published'
+                                      ? <CheckCircleIcon className="w-4 h-4 mx-auto" />
+                                      : null
                                   }
                                 </div>
                               </div>
@@ -1190,8 +1228,8 @@ export default function ScheduleManagementPage() {
                                 ยกเลิก
                               </button>
                             </div>
-                            <div className="mt-2 p-2 bg-yellow-50 rounded text-xs text-yellow-800">
-                              ⚠️ การเปลี่ยนแปลงจะมีผลกับเวรนี้เท่านั้น
+                            <div className="mt-2 p-2 bg-yellow-50 rounded text-xs text-yellow-800 flex items-center gap-1">
+                              <WarningIcon className="w-3 h-3 flex-shrink-0" /> การเปลี่ยนแปลงจะมีผลกับเวรนี้เท่านั้น
                             </div>
                           </>
                         )}
@@ -1205,29 +1243,21 @@ export default function ScheduleManagementPage() {
               {/* Available Nurses */}
               <div className="mb-4">
                 <h4 className="text-sm font-medium text-black mb-2">พยาบาลที่ว่าง</h4>
-                <SortableContext items={availableNurses.map(n => n.user_id)} strategy={verticalListSortingStrategy}>
-                  <div className="max-h-80 overflow-y-auto space-y-2">
-                    {availableNurses.map(nurse => (
-                      <DraggableNurse
-                        key={nurse.user_id}
-                        nurse={nurse}
-                        onAssign={() => {
-                          console.log('Assign button clicked for:', nurse.name)
-                          console.log('Selected date:', selectedDate)
-                          console.log('Selected shift:', selectedShift)
-
-                          if (!selectedDate) {
-                            showToast('warning', 'ข้อมูลไม่ครบ', 'กรุณาเลือกวันที่ก่อนจัดเวร')
-                            return
-                          }
-                          console.log('Calling handleAssignNurse...')
-                          handleAssignNurse(nurse, selectedDate, selectedShift)
-                        }}
-                        isDragging={activeId === nurse.user_id}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
+                <div className="max-h-80 overflow-y-auto space-y-2">
+                  {availableNurses.map(nurse => (
+                    <DraggableNurse
+                      key={nurse.user_id}
+                      nurse={nurse}
+                      onAssign={() => {
+                        if (!selectedDate) {
+                          showToast('warning', 'ข้อมูลไม่ครบ', 'กรุณาเลือกวันที่ก่อนจัดเวร')
+                          return
+                        }
+                        handleAssignNurse(nurse, selectedDate, selectedShift)
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
 
               {/* Current Assignments for Selected Date */}
@@ -1451,12 +1481,26 @@ export default function ScheduleManagementPage() {
 
       </div>
 
-      <DragOverlay>
+      <DragOverlay dropAnimation={{ duration: 180, easing: 'ease' }}>
         {draggedNurse ? (
-          <div className="flex items-center justify-between p-2 border rounded bg-white shadow-lg opacity-90">
-            <div>
-              <p className="text-sm font-medium">{draggedNurse.name}</p>
-              <p className="text-xs text-black">{draggedNurse.email}</p>
+          <div
+            className="flex items-center gap-3 px-3 py-2.5 bg-white rounded-xl shadow-2xl border border-blue-200"
+            style={{ transform: 'rotate(2deg)', width: 220 }}
+          >
+            {draggedNurse.pic_profile ? (
+              <img
+                src={draggedNurse.pic_profile}
+                alt={draggedNurse.name}
+                className="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-2 ring-blue-300"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 ring-2 ring-blue-300">
+                <span className="text-blue-700 font-bold text-sm">{draggedNurse.name.charAt(0)}</span>
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">{draggedNurse.name}</p>
+              <p className="text-xs text-blue-500">ลากไปวางที่กะเวร</p>
             </div>
           </div>
         ) : null}

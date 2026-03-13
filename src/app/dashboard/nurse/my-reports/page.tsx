@@ -1,6 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import {
+  SunriseIcon, SunIcon, MoonIcon, BeachIcon,
+  CalendarIcon, ChartBarIcon, DownloadIcon,
+} from '@/components/icons'
 
 interface WorkReport {
   report_id: number
@@ -27,9 +31,9 @@ interface Schedule {
 }
 
 const SHIFT_TYPES = {
-  morning: { label: 'เช้า', icon: '☀️', color: 'bg-yellow-100 text-yellow-800 border-yellow-300', time: '06:00-14:00' },
-  afternoon: { label: 'บ่าย', icon: '🌤️', color: 'bg-orange-100 text-orange-800 border-orange-300', time: '14:00-22:00' },
-  night: { label: 'ดึก', icon: '🌙', color: 'bg-indigo-100 text-indigo-800 border-indigo-300', time: '22:00-06:00' },
+  morning: { label: 'เช้า', icon: SunriseIcon, color: 'bg-yellow-100 text-yellow-800 border-yellow-300', time: '06:00-14:00' },
+  afternoon: { label: 'บ่าย', icon: SunIcon, color: 'bg-orange-100 text-orange-800 border-orange-300', time: '14:00-22:00' },
+  night: { label: 'ดึก', icon: MoonIcon, color: 'bg-indigo-100 text-indigo-800 border-indigo-300', time: '22:00-06:00' },
 }
 
 export default function MyReportsPage() {
@@ -163,10 +167,10 @@ export default function MyReportsPage() {
             {daySchedules.map((schedule) => (
               <div
                 key={schedule.assignment_id}
-                className={`text-xs p-1 rounded border ${SHIFT_TYPES[schedule.shift_type].color}`}
+                className={`flex items-center gap-1 text-xs p-1 rounded border ${SHIFT_TYPES[schedule.shift_type].color}`}
                 title={`กะ${SHIFT_TYPES[schedule.shift_type].label} (${SHIFT_TYPES[schedule.shift_type].time})`}
               >
-                {SHIFT_TYPES[schedule.shift_type].icon} {SHIFT_TYPES[schedule.shift_type].label}
+                {(() => { const I = SHIFT_TYPES[schedule.shift_type].icon; return <I className="w-3 h-3 flex-shrink-0" /> })()} {SHIFT_TYPES[schedule.shift_type].label}
               </div>
             ))}
           </div>
@@ -221,9 +225,9 @@ export default function MyReportsPage() {
         <button
           onClick={handleExportPDF}
           disabled={!selectedReport}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed print:hidden"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed print:hidden"
         >
-          📥 Export PDF
+          <DownloadIcon className="w-4 h-4" /> Export PDF
         </button>
       </div>
 
@@ -280,22 +284,22 @@ export default function MyReportsPage() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">รายละเอียดกะ</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <div className="text-sm text-yellow-600 mb-1">🌅 กะเช้า</div>
+                <div className="inline-flex items-center gap-1 text-sm text-yellow-600 mb-1"><SunriseIcon className="w-4 h-4" /> กะเช้า</div>
                 <div className="text-2xl font-bold text-yellow-700">{selectedReport.morning_shifts}</div>
                 <div className="text-xs text-yellow-500 mt-1">{selectedReport.morning_shifts * 8} ชม.</div>
               </div>
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <div className="text-sm text-orange-600 mb-1">☀️ กะบ่าย</div>
+                <div className="inline-flex items-center gap-1 text-sm text-orange-600 mb-1"><SunIcon className="w-4 h-4" /> กะบ่าย</div>
                 <div className="text-2xl font-bold text-orange-700">{selectedReport.afternoon_shifts}</div>
                 <div className="text-xs text-orange-500 mt-1">{selectedReport.afternoon_shifts * 8} ชม.</div>
               </div>
               <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                <div className="text-sm text-indigo-600 mb-1">🌙 กะดึก</div>
+                <div className="inline-flex items-center gap-1 text-sm text-indigo-600 mb-1"><MoonIcon className="w-4 h-4" /> กะดึก</div>
                 <div className="text-2xl font-bold text-indigo-700">{selectedReport.night_shifts}</div>
                 <div className="text-xs text-indigo-500 mt-1">{selectedReport.night_shifts * 8} ชม.</div>
               </div>
               <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-                <div className="text-sm text-teal-600 mb-1">🏖️ วันหยุด</div>
+                <div className="inline-flex items-center gap-1 text-sm text-teal-600 mb-1"><BeachIcon className="w-4 h-4" /> วันหยุด</div>
                 <div className="text-2xl font-bold text-teal-700">{selectedReport.rest_days}</div>
                 <div className="text-xs text-teal-500 mt-1">วัน</div>
               </div>
@@ -306,23 +310,23 @@ export default function MyReportsPage() {
           <div className="mb-6 flex items-center space-x-4 print:hidden">
             <button
               onClick={() => setViewMode('calendar')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 viewMode === 'calendar'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              📅 ปฏิทิน
+              <CalendarIcon className="w-4 h-4" /> ปฏิทิน
             </button>
             <button
               onClick={() => setViewMode('charts')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 viewMode === 'charts'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
-              📊 กราฟ
+              <ChartBarIcon className="w-4 h-4" /> กราฟ
             </button>
           </div>
 
@@ -336,20 +340,20 @@ export default function MyReportsPage() {
               <div className="mt-4 flex items-center space-x-4 text-sm">
                 <span className="font-medium text-gray-700">คำอธิบาย:</span>
                 <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 rounded border text-xs ${SHIFT_TYPES.morning.color}`}>
-                    {SHIFT_TYPES.morning.icon} กะเช้า
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-xs ${SHIFT_TYPES.morning.color}`}>
+                    <SunriseIcon className="w-3 h-3" /> กะเช้า
                   </span>
                   <span className="text-gray-500">06:00-14:00</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 rounded border text-xs ${SHIFT_TYPES.afternoon.color}`}>
-                    {SHIFT_TYPES.afternoon.icon} กะบ่าย
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-xs ${SHIFT_TYPES.afternoon.color}`}>
+                    <SunIcon className="w-3 h-3" /> กะบ่าย
                   </span>
                   <span className="text-gray-500">14:00-22:00</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 rounded border text-xs ${SHIFT_TYPES.night.color}`}>
-                    {SHIFT_TYPES.night.icon} กะดึก
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-xs ${SHIFT_TYPES.night.color}`}>
+                    <MoonIcon className="w-3 h-3" /> กะดึก
                   </span>
                   <span className="text-gray-500">22:00-06:00</span>
                 </div>
